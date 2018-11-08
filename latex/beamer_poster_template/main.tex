@@ -48,9 +48,14 @@
 \definecolor{camblue}{RGB}{163,193,173}
 \definecolor{myblue}{RGB}{8,81,156}
 
+% itemize styling
+\usepackage{enumitem}
+\setlist[itemize]{labelsep=6mm,label=$\bullet$}
 
-% Include a logo of your project if desired
-%\logo{\pgfputat{\pgfxy(-11,107)}{\pgfbox[center,base]{\includegraphics[width=7cm]{ProjectLogo.png}}}}
+% for fixed table width
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
 
 %-----------------------------------------------
