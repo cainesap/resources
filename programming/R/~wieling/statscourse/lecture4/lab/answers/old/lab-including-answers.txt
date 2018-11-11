@@ -1,0 +1,366 @@
+## STATISTICS COURSE - LAB SESSION 4, JULY 11, 2014
+## Analyzing EEG data using GAMs
+## Martijn Wieling (with help of Nienke Meulman)
+
+## FOR THIS LAB SESSION, PLEASE MAKE SURE YOU USE THE 64 BITS VERSION OF R
+## (ALSO IN R STUDIO). YOU SHOULD SEE WHICH VERSION YOU USE AT STARTUP.
+
+## During lecture 4 we have looked at the effect of Correctness and the effect of Age of 
+## Arrival. In this lab session we will look at another additional factor: Structure. 
+## Research question: Is there an effect of the distance between determiner and noun in the 
+## violation? We compare the DN (determiner-noun, e.g. der Garten/*das Garten) structure with 
+## the DAN (determiner-adjective-noun, e.g. das frische Gras/*der frische Gras) structure.
+
+# A1. Start R 3.1.0
+# Start R and make sure the newest mgcv packages is installed
+library(mgcv)
+packageVersion('mgcv') # tested with version 1.8.1
+
+# A2. Now download and load the following files containing the dataset and some functions:
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture4/lab/dat.rda', 'dat.rda')
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture4/lab/plotting.R', 'plotting.R')
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture4/lab/compareML.R', 'compareML.R')
+load('dat.rda') # This dataset is a subset of 15 subjects
+source('plotting.R')
+source('compareML.R')
+
+# A3. Data investigation
+head(dat)
+str(dat)
+summary(dat)
+dim(dat)
+
+# A4. Sort the data
+# The data needs to be sorted to be able to check for autocorrelation problems later
+dat = dat[order(dat$Subject, dat$TrialNr, dat$Roi, dat$Time, decreasing=F),]
+head(dat)
+
+# A5. Our first model for the general effect of time (we use bam as the dataset is large):
+m0 = bam(uV ~ s(Time), data=dat, gc.level=2, method='ML')
+
+# A6. Look at the results of the model and plot the general effect of time
+# Note that this is not very interesting since we are not differentiating between correct vs. 
+# incorrect or DN vs. DAN
+summary(m0)
+par(mfrow=c(1,2))
+plot(m0,rug=F,shade=T,ylim=c(2,-2), main='m0'); abline(h=0)
+
+# A7. Taking into account individual variation via random wiggly curves
+m0b = bam(uV ~ s(Time) + s(Time,Subject,bs='fs',m=1), data=dat, gc.level=2, method='ML')
+# (N.B. You can ignore the warning messages about repeated smooths in this lab)
+summary(m0b)
+plot(m0b,select=1,rug=F,shade=T,ylim=c(2,-2), main='m0b'); abline(h=0) # wider confidence bands
+
+
+#----------------------------------------------
+# Effect of Correctness (correct vs. incorrect)
+#----------------------------------------------
+
+# B1. To see whether there is an effect of correctness, we make a model where we look at correct 
+# versus incorrect. We also include random wiggly curves for subject-correctness combination.
+dat$SubjectCor = interaction(dat$Subject,dat$Correctness)
+m1 = bam(uV ~ s(Time,by=Correctness) + Correctness + s(Time,SubjectCor, bs='fs', m=1), data=dat, 
+         gc.level=2, method='ML')
+summary(m1)
+
+# B2. Plot random wiggly curves per subject-correctness combination
+par(mfrow=c(1,1))
+plot(m1,select=3)
+
+# B3. We need to check whether this model suffers from autocorrelation:
+m1acf = acf(resid(m1)) # plot autocorrelation
+rhoval = as.vector(m1acf[1]$acf)
+rhoval
+# Note that we use this value throughout this lab session, but in principle the lowest rho
+# value which is still adequate is best. Very high rho values are somewhat problematic:
+# i.e. if you have a rho value of 0.99, your model will only try to predict the 1% of the 
+# variation not explained by the previous observation. So I follow the following strategy:
+# - start from the acf value at lag 1 (as above)
+# - then find the optimal acf value (i.e. with the lowest (RE)ML score)
+# - then decrease the acf value with as much as possible, without
+#   getting a significantly worse model (using compareML)
+# Note that for each distinct model, you need to use the rho values specific 
+# (using the method above) for that model. I.e. when comparing two models
+# differing in fixed/random effects, you might have two different rho values. 
+
+# B4. Autocorrelation correction is necessary, so we include the rho parameter in the model:
+m1b = bam(uV ~ s(Time,by=Correctness) + Correctness + s(Time,SubjectCor,bs='fs',m=1), data=dat, 
+          gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+
+# B5. Let's see if adding the rho parameter significantly improves the model:
+compareML(m1, m1b) # m1b preferred
+
+# B6. In the summary of this new model, we see that the non-linear pattern for correct does not 
+# significantly deviate from zero, but the (non-linear: edf > 1) pattern for incorrect does:
+summary(m1b)
+
+# B7. Let's plot the two patterns, and the difference between them:
+x11() # opens new plot window, USE: quartz() in Mac OS X
+plotSmooths(m1b,"Time","Correctness",colors=c('green','red')) # visualizing both patterns, custom function
+x11() 
+plotDiff(m1b,"Time","Correctness") # visualizing the difference, custom function
+
+# B8. We still have to test whether the difference between correct and incorrect is significant. 
+# For that we create a binary variable and test whether the one condition (incorrect) is 
+# significantly different from the reference level (correct).
+dat$IsIncorrect = (dat$Correctness == 'incor')*1 # create a binary variable (0-1 coding).
+m1c = bam(uV ~ s(Time) + s(Time,by=IsIncorrect) + s(Time,SubjectCor,bs='fs',m=1), data=dat, 
+          gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m1c) # highly significant
+
+# B9. We can also separate intercept difference and the non-linear difference via an ordered
+#     factor 
+dat$CorrectnessO = as.ordered(dat$Correctness)
+contrasts(dat$CorrectnessO) = 'contr.treatment' # contrast treatment
+m1d = bam(uV ~ s(Time) + s(Time,by=CorrectnessO) + CorrectnessO + s(Time,SubjectCor,bs='fs',m=1), data=dat,
+gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m1d) # both intercept and non-linear difference are highly significant
+
+
+# EXERCISE 1. plot the random wiggly curves of model m1d. What has happened to them?
+
+# ANSWER 1: 
+plot(m1d, select=3) 
+# The wiggly curves have (almost) lost their wigglyness, so they are essentially now random intercepts.
+# Note that also in the fourth lecture, adding rho resulted in less wigglyness for the random
+# wiggly curves (the number of edf decreased for the random wiggly curves). This does not
+# happen always, however.
+
+
+# B10. We can plot the difference smooths of m1c and m1d, and compare them to the difference 
+# we plotted before for model m1b using the plotDiff() function. Note that the difference curve
+# for m1b will be similar to the difference smooth of m1c (slight differences may occur, as they
+# are somewhat different models), but not m1d, as the latter  does not show the (constant) 
+# intercept difference (so the smooth is centered) 
+par(mfrow=c(1,3))
+plotDiff(m1b,"Time","Correctness") # m1b difference plotted with custom function
+plot(m1c,shade=T,rug=F,ylim=c(10,-0.5),select=2,main='Difference m1c', ylab='uV'); abline(h = 0)  # m1c plotted with default plotting function of mgcv
+plot(m1d,shade=T,rug=F,ylim=c(2,-4),select=2,main='Smooth difference m1d', ylab='uV'); abline(h = 0)  # m1d plotted with default plotting function of mgcv
+# the smaller confidence bands are caused by not having to take the uncertainty about the intercept into account
+
+
+# EXERCISE 2. What do you conclude about the effect of Correctness?
+
+# ANSWER 2: 
+# The incorrect condition has significantly higher amplitudes than the 
+# correct condition. Whereas the correct condition shows a linear pattern, 
+# neither decreasing nor increasing over time, the incorrect condition shows 
+# a non-linear, U-shaped pattern, peaking around 1000 ms after stimulus onset.
+
+
+
+#---------------------------------
+# Effect of Structure (DN vs. DAN)
+#---------------------------------
+
+# C1. Now let's investigate the effect of distance between determiner and noun. 
+# First, we create a model where we look at the effect of structure (DN versus DAN) in general.
+m2 = bam(uV ~ s(Time,by=Structure) + Structure + s(Time,SubjectCor,bs='fs',m=1), data=dat, 
+         gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m2)  
+x11()
+plotSmooths(m2,"Time","Structure") # visualizing both patterns
+x11()
+plotDiff(m2,"Time","Structure") # visualizing the differences (comparing DN to DAN)
+
+# C2. We would like to know whether the P600 effect between DN and DAN differs. 
+# Remember that the size of the P600 is determined by the DIFFERENCE between incorrect and correct. 
+# We want to see whether that difference varies between the levels of Structure. 
+# So let's make a model where we look at the interaction between Correctness and Structure:
+dat$CorStruct = interaction(dat$Correctness,dat$Structure) # create a new variable with 4 levels
+levels(dat$CorStruct) # show levels
+m3 = bam(uV ~ s(Time,by=CorStruct) + CorStruct + s(Time,SubjectCor,bs='fs',m=1), data=dat, 
+         gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m3)
+x11()
+plotSmooths(m3,"Time","CorStruct")
+
+# C3. Again, we want to know about the significance of the difference curves:
+dat$IsDN = (dat$Structure == 'DN')*1 # new binary variable
+dat$IsIncorrectDN = dat$IsIncorrect * dat$IsDN # new binary variable
+m4 = bam(uV ~ s(Time) + s(Time,by=IsIncorrect) + s(Time, by=IsDN) + s(Time, by=IsIncorrectDN) + 
+           s(Time,SubjectCor,bs='fs',m=1), data=dat, gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m4)
+
+# C4. Now, try to interpret what you see in the following plots:
+x11()
+par(mfrow=c(2,2))
+plotSmooths(m3,"Time","CorStruct", useLegend=F)
+plot(m4,shade=T,rug=F,ylim=c(7,-4),select=2, ylab='uV', main='m4: IsIncorrect'); abline(h=0)
+plot(m4,shade=T,rug=F,ylim=c(7,-4),select=3, ylab='uV', main='m4: IsDN'); abline(h=0)
+plot(m4,shade=T,rug=F,ylim=c(7,-4),select=4, ylab='uV', main='m4: IsIncorrectDN'); abline(h=0)
+# Note that cor.DAN is the reference level (here all the binary variables are set to 0). 
+# So the second plot is what you need to do to get from cor.DAN to incor.DAN. 
+# The third plot shows what you need to do to get from cor.DAN to cor.DN. 
+# To get to incor.DN, you need to add the second plot (because IsIncorrect == 1), 
+# the third plot (because IsDN == 1), but also the fourth plot (because IsIncorrectDN == 1).
+
+# N.B. Ideally you also want to add random wiggly curves per item ('Word' in this case). 
+# These models take a lot more time to run though, so we excluded them from the lab session 
+# (but see home exercise below!).
+
+
+# EXERCISE 3. What do you conclude about the effect of Structure and Correctness?
+
+# ANSWER 3:
+# The main effects of both Structure and Correctness are significant, as 
+# well as the interaction between the two factors. Generally, amplitudes 
+# for DN are lower than for DAN, and amplitudes for correct are lower than 
+# for incorrect. The difference between the correct and incorrect condition
+# increases over time for the DN condition (linear effect), whereas this 
+# difference in the DAN condition shows a non-linear, U-shaped, pattern.
+
+
+#----------------------------------------
+# Effect of Age of Arrival for DN vs. DAN
+#----------------------------------------
+
+# D1. We saw that there are some differences between the DN and the DAN conditions. 
+# Now let's see whether these differences vary depending on the AoArr of the subject.
+# (Note that we only have a subset of the data here (n=15), so there are not so many different 
+# AoArrs to base the model on.)
+m5 = bam(uV ~ te(Time,AoArr,by=CorStruct) + CorStruct + s(Time,SubjectCor,bs='fs',m=1), data=dat, 
+         gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m5)
+
+# D2. We can check whether we need to increase k. We can set k to a single value, or a list of 
+#     multiple values. If you select a single value for te(), every dimension is set to 
+#     that value, i.e. for a two-dimensional tensor k=10 is equal to k=c(10,10)
+#     (an s() only uses a single k-value, even for multiple dimensions)
+m5b = bam(uV ~ te(Time,AoArr,by=CorStruct,k=c(10,10)) + CorStruct + s(Time,SubjectCor,bs='fs',m=1), 
+          data=dat, gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m5b)
+compareML(m5,m5b) # the additional complexity is not needed, the ML score of m5 is even lower than that of m5b
+
+# D3. Plot the surfaces (partial effects, so these exclude the intercept differences)
+# zlim is used to put every plot on the same scale
+par(mfrow=c(2,2))
+pvis.gam(m5, plot.type='contour', view=c('Time','AoArr'), select=1, color='topo', main='m5: cor.DAN',zlim=c(-4,6))
+pvis.gam(m5, plot.type='contour', view=c('Time','AoArr'), select=2, color='topo', main='m5: incor.DAN',zlim=c(-4,6))
+pvis.gam(m5, plot.type='contour', view=c('Time','AoArr'), select=3, color='topo', main='m5: cor.DN',zlim=c(-4,6))
+pvis.gam(m5, plot.type='contour', view=c('Time','AoArr'), select=4, color='topo', main='m5: incor.DN',zlim=c(-4,6))
+
+# D4. The partial effects are not so informative, as the intercept differences (in the parametric part of 
+# the summary) are not included. We can include these in vis.gam (shows complete effects) by using the cond-parameter. 
+par(mfrow=c(2,2))
+vis.gam(m5, plot.type='contour', view=c('Time','AoArr'), cond=list(CorStruct='cor.DAN'), color='topo', main='m5: cor.DAN', zlim=c(-8,6))
+vis.gam(m5, plot.type='contour', view=c('Time','AoArr'), cond=list(CorStruct='incor.DAN'), color='topo', main='m5: incor.DAN',zlim=c(-8,6))
+vis.gam(m5, plot.type='contour', view=c('Time','AoArr'), cond=list(CorStruct='cor.DN'), color='topo', main='m5: cor.DN',zlim=c(-8,6))
+vis.gam(m5, plot.type='contour', view=c('Time','AoArr'), cond=list(CorStruct='incor.DN'), color='topo', main='m5: incor.DN',zlim=c(-8,6))
+
+# D5. But actually, this is also not what we need, we only need to look at the 
+# difference between incor vs. cor for both cases
+par(mfrow=c(1,2))
+plotDiff2D(m5,'Time','AoArr','CorStruct',c('cor.DAN','incor.DAN'))
+plotDiff2D(m5,'Time','AoArr','CorStruct',c('cor.DN','incor.DN'))
+
+# D6. Furthermore, we want to test if these difference surfaces are significant.
+m6 = bam(uV ~ te(Time,AoArr) + te(Time,AoArr,by=IsIncorrect) + te(Time,AoArr,by=IsDN) + 
+           te(Time,AoArr,by=IsIncorrectDN) + s(Time,SubjectCor,bs='fs',m=1), data=dat, 
+         gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m6) # they are significant
+
+# D7. We can now plot the difference surface between DAN correct and incorrect directly 
+# and compare this to the previous difference surface, as the models are *different*
+# these surfaces may differ (somewhat). 
+par(mfrow=c(1,2))
+plotDiff2D(m5,'Time','AoArr','CorStruct',c('cor.DAN','incor.DAN'),main='m5: Calculated difference incor.DAN vs. cor.DAN')
+pvis.gam(m6, plot.type='contour', view=c('Time','AoArr'), select=2, color='topo', main='m6: Difference surface incor.DAN vs. cor.DAN')
+
+# D8. We can test whether the 2-dimensional interaction is necessary via decomposition:
+m7 = bam(uV ~ s(Time,by=CorStruct) + s(AoArr,by=CorStruct)  + ti(Time,AoArr,by=CorStruct,k=10) + 
+           CorStruct + s(Time,SubjectCor,bs='fs',m=1), data=dat, gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m7)
+
+
+# EXERCISE 4. Is the interaction necessary? Test this by comparing with a simpler model (save as m8).
+
+# ANSWER 4:
+# It seems not, as the ti's are n.s., but we should test this by excluding the interaction:
+m8 = bam(uV ~ s(Time,by=CorStruct) + s(AoArr,by=CorStruct)  + 
+           CorStruct + s(Time,SubjectCor,bs='fs',m=1), data=dat, gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+compareML(m7,m8) # m7 is not significantly better than m8
+summary(m8) # it appears there is also no effect of AoArr
+
+
+# EXERCISE 5. Plot the difference patterns across age of arrival for both structures for model m8.
+
+# ANSWER 5:
+plotDiff(m8,'AoArr','CorStruct',c('cor.DAN','incor.DAN'))
+plotDiff(m8,'AoArr','CorStruct',c('cor.DN','incor.DN'))
+# this also suggests there is no significant difference for AoArr
+
+
+# EXERCISE 6. Test if the difference patterns across time and AoArr are significant by using
+#             an ordered factor: CorStructO
+#             Hint: you need to make two models (m9a and m9b), one where cor.DAN is the
+#                   reference level, and another where cor.DN is. 
+#                   After having run the first model, use: 
+#                   dat$CorStruct = relevel(dat$CorStruct,'cor.DN') 
+#                   to relevel and then create the ordered factor. 
+
+# ANSWER 6
+dat$CorStructO = as.ordered(dat$CorStruct)
+contrasts(dat$CorStructO) = 'contr.treatment'
+
+m9a = bam(uV ~ s(Time) + s(Time,by=CorStructO) + s(AoArr) + s(AoArr,by=CorStructO) + CorStructO 
+              + s(Time,SubjectCor,bs='fs',m=1), data=dat, 
+         gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+summary(m9a) # shows difference between cor.DAN vs. rest, only different across Time, not AoArr
+
+dat$CorStruct = relevel(dat$CorStruct,'cor.DN') # releveling to show difference wrt cor.DN
+dat$CorStructO = as.ordered(dat$CorStruct)
+contrasts(dat$CorStructO) = 'contr.treatment'
+m9b = bam(uV ~ s(Time) + s(Time,by=CorStructO) + s(AoArr) + s(AoArr,by=CorStructO) + CorStructO 
+              + s(Time,SubjectCor,bs='fs',m=1), data=dat, 
+         gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart)
+
+# multiple comparisons (two), so use lower p-value threshold (e.g., 0.025)
+summary(m9b) # shows difference between cor.DN vs. rest, only different across Time, not AoArr
+# To conclude: it appears there is only a Time effect, but not an AoArr effect (in this SUBSET)
+
+
+# D9. Model criticism
+# The residuals of m8 unfortunately look familiar (compared to the lecture)...
+par(mfrow=c(1,2))
+qqplot.rho(m8)
+hist.rho(m8)
+# REMARK: using the t-distribution as an alternative to the normal distribution might
+# alleviate this problem, but this is in version 1.8.1 of mgcv only
+# implemented for the function gam(..., family='scat'), and not for bam() and thus not 
+# useful for large datasets and when correction for autocorrelation is necessary
+# (this is being worked on, however, by the maker of the mgcv package).
+
+#--------------------------------------------------------------
+# Computationally intensive: taking into account effect of Word
+#--------------------------------------------------------------
+
+# You can do these exercises at home, since running the model takes quite long.
+
+
+# EXERCISE 7. Add random wiggly curves per word-correctness combination to m8 
+#             and rerun the model (name it m10). 
+#             Use multiple cores (only use the physical number of cores, not the virtual
+#             ones obtained via hyper-threading: so set to 2 if you have a dual-core machine
+#             or 4 for a quad-core machine). It will take an hour or so to compute. 
+#             Don't forget to make the new factorial predictor combining Word and Correctness.
+
+# ANSWER 7:
+require(parallel)
+cl = makeCluster(4) # if you have a quadcore machine
+dat$WordCor = interaction(dat$Word,dat$Correctness)
+system.time(m10 <- bam(uV ~ s(Time,by=CorStruct) + s(AoArr,by=CorStruct) +
+              CorStruct + s(Time,SubjectCor,bs='fs',m=1) + s(Time,WordCor,bs='fs',m=1), data=dat, 
+              gc.level=2, method='ML', rho=rhoval, AR.start=SeqStart, cluster=cl))
+summary(m10)
+
+
+# EXERCISE 8. Assess which model is best, m8 or m10.
+
+# ANSWER 8:
+compareML(m8,m10) # m10 is better
+
+
+# REMARK about normal model building: always include the random wiggly curves and rho, then make
+# the model which tests your hypothesis. If computation takes too long, start with random wiggly 
+# curves per subject only, but always include rho if there is autocorrelation. 

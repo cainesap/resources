@@ -1,0 +1,12 @@
+# decompress .bz2
+bzip2 -d filename.bz2
+
+# tarball
+tar xvf filename.tar
+
+# easy default build
+./configure && make && sudo make install
+
+# control apache server
+sudo /usr/local/apache2/bin/apachectl -k start|stop|restart
+

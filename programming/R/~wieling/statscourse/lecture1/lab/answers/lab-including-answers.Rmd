@@ -1,0 +1,358 @@
+### STATISTICS COURSE - LAB SESSION 1
+__Martijn Wieling, [http://www.martijnwieling.nl](http://www.martijnwieling.nl)__
+
+_This dataset is also discussed in Baayen (2008: Ch. 7.1)_
+
+```{r date1, include=F}
+Sys.setlocale("LC_TIME", "C")
+options(width = 120)
+```
+
+```{r date2, echo=F}
+cat("Generated on:", format(Sys.time(), "%B %d, %Y - %H:%M:%S"))
+```
+
+
+```{r analysis, fig.width=8, fig.height=7}
+## MAKE SURE YOU HAVE THE MOST RECENT 64 BITS VERSION OF R INSTALLED (2014-11-03: 3.1.2)
+##
+## FOR A GOOD INTRODUCTION TO R, YOU CAN FOLLOW THE FOLLOWING COURSERA COURSE:
+## https://www.coursera.org/course/compdata
+##
+## SOME PEOPLE FIND R STUDIO A BIT MORE USER FRIENDLY. YOU CAN DOWNLOAD THIS HERE:
+## http://www.rstudio.com/ide/download/
+
+# A0. Start R 3.1.2
+# Start R and make sure the libraries lmer and car are installed
+# Menu: Packages -> Install package(s)...  -> Select mirror -> Select packages
+# or: 
+# install.packages(c("lme4","car"),repos='http://cran.r-project.org')
+
+# A1. These commands should work when the packages are installed
+library(lme4)
+library(car)
+
+# version information
+R.version.string
+packageVersion('lme4')
+packageVersion('car')
+
+
+# A2. Now download and load the following file containing some functions for plotting: 
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture1/lab/myFunctions.R', 'myFunctions.R')
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture1/lab/lexdec.rda', 'lexdec.rda')
+source('myFunctions.R')
+
+# A3. load the dataset lexdec
+load('lexdec.rda')
+
+# A4. data investigation
+head(lexdec)
+str(lexdec)
+summary(lexdec)
+nrow(lexdec) # 1659 rows
+plot(density(lexdec$Frequency)) # e.g., to investigate distributions 
+
+# frequency normally shows a skewed distribution, and was therefore log-transformed
+# this was the original distribution:
+plot(density(exp(lexdec$Frequency)))
+
+# A5. data cleaning: remove impossible RT's (< 200ms. or > 1100ms.)
+# and investigate only correct responses
+lexdec2 = lexdec[exp(lexdec$RT)>200 & exp(lexdec$RT) < 1100,]
+nrow(lexdec2)/nrow(lexdec) # 97.6% retained
+lexdec3 = lexdec2[lexdec2$Correct == 'correct',] 
+
+# A6. We create our first linear regression model (no mixed-effects yet)
+linearModel = lm(RT ~ Trial, data=lexdec3)
+
+# A7. Look at the results of the model and note that Trial is not significant here
+summary(linearModel)
+
+
+###### MIXED-EFFECTS REGRESSION: RANDOM INTERCEPTS ######
+# B1. Since we want our results to be generalizable across words and subjects,
+# we add random intercepts for these factors.
+# We start with a random intercept for Subject: (1|Subject) 
+mixedModel1 = lmer(RT ~ Trial + (1|Subject), data=lexdec3)
+
+# B2. Look at the results, note that p-values are not present anymore, 
+# but |t| > 1.65 equals p < 0.05 (one-tailed) and |t| > 2 equals p < 0.05
+# (for a large data set)
+# Note that Trial is still not significant
+summary(mixedModel1)
+
+# B3. Test if the random intercept is necessary (significant improvement)
+AIC(linearModel) - AIC(mixedModel1) # should be at least 2, then the 2nd model is better
+
+# B4. To see how the intercepts for subjects vary, we can plot them
+# (this custom function uses the random effects extracted with ranef())
+# remove the ## to save it as a pdf instead (in your present directory)
+## pdf('plotname.pdf', width = 10, height = 10)
+myInterceptPlot(lexdec,"RT","Trial","Subject",mixedModel1)
+## dev.off()
+# use: getwd() to see in which folder it was saved
+
+# B5. We now add random intercepts for Word and display the results
+mixedModel2 = lmer(RT ~ Trial + (1|Subject) + (1|Word), data=lexdec3)
+summary(mixedModel2) 
+# Note that trial is now significant. So when taking into account the 
+# structural variability associated with word, trial actually plays a significant role. 
+
+## EXERCISE 1: Plot how the intercepts vary per word
+# Hint: Consider saving it as a pdf to show a bigger graph (increase width and height)
+
+## ANSWER 1:
+pdf('wordintercepts.pdf', width = 15, height = 15)
+myInterceptPlot(lexdec,"RT","Trial","Word",mixedModel2)
+dev.off()
+getwd() # see where it was stored
+
+
+# B6. We test if the inclusion of this random intercept is an improvement
+# Caveat: all these methods are somewhat problematic as it is unclear how
+# to define the number of degrees of freedom in a mixed model...
+# Note that the p-value of the LRT below is conservative 
+# (see http://lme4.r-forge.r-project.org/lMMwR/lrgprt.pdf, page 46)
+AIC(mixedModel1) - AIC(mixedModel2) # > 2, so mixedModel2 is much better
+
+# alternative testing method: Likelihood Ratio Test (LRT), note that refit
+# needs to be False as we're comparing random effects, so REML fitting is
+# appropriate
+anova(mixedModel1,mixedModel2,refit=F) 
+
+# B7. How well does the model do? (i.e. explained variance)
+cor(fitted(mixedModel2),lexdec3$RT)^2 # 50% of the variance explained 
+# this is due to random intercepts!, see:
+cor(fitted(linearModel),lexdec3$RT)^2
+
+# B8. Now we can add another fixed effect-factor
+mixedModel3 = lmer(RT ~ Trial + NativeLanguage + (1|Subject) + (1|Word), data=lexdec3)
+summary(mixedModel3) # NativeLanguage is significant, people with the Other native language are slower
+
+# B9. Test if adding the fixed effect parameter significantly improves the model
+# We need to set the REML parameter to false when fixed effect parameters are
+# to be compared. For the final model and when comparing random effect, REML
+# should be set to true (the default). While significant parameters will
+# generally result in a significant improvement, this test is necessary
+# when including multi-level factors or interactions
+mixedModel2b = lmer(RT ~ Trial + (1|Subject) + (1|Word), data=lexdec3, REML=F)
+mixedModel3b = lmer(RT ~ Trial + NativeLanguage + (1|Subject) + (1|Word), data=lexdec3, REML=F)
+AIC(mixedModel2b) - AIC(mixedModel3b) # 3b is better
+
+
+# EXERCISE 2: Add Frequency as a fixed-effect predictor to the model and assess
+#             if the model improves using model comparison (hint: REML=F for
+#             model comparison). Store the model as mixedModel4.
+
+## ANSWER 2:
+mixedModel4 = lmer(RT ~ Trial + NativeLanguage + Frequency + (1|Subject) + (1|Word), data=lexdec3)
+summary(mixedModel4)
+mixedModel4b = lmer(RT ~ Trial + NativeLanguage + Frequency + (1|Subject) + (1|Word), data=lexdec3, REML=F)
+AIC(mixedModel3b) - AIC(mixedModel4b) # 4b is much better
+
+
+###### MIXED-EFFECTS REGRESSION: RANDOM SLOPES ######
+# C1. We now want to see if subjects become slower or faster during the course of 
+# the experiment: include a random slope for Trial 
+# Note that it is important to center Trial! Also note you will get warning messages,
+# which you should read carefully.
+lexdec3$cTrial = scale(lexdec3$Trial,scale=F) # centering
+mixedModel4c = lmer(RT ~ cTrial + NativeLanguage + Frequency + (1|Subject) + (0+cTrial|Subject) + (1|Word), 
+                    data=lexdec3)
+
+# The model gives a warning that the model is nearly unidentifiable and recommends rescaling the predictors. 
+# We follow its recommendation for trial as this variable caused the problem: 
+lexdec3$zTrial = scale(lexdec3$Trial) # z-transforming (centering, then dividing by standard deviation)
+mixedModel4c = lmer(RT ~ zTrial + NativeLanguage + Frequency + (1|Subject) + (0+zTrial|Subject) + (1|Word), 
+                    data=lexdec3) # no warning
+
+# C2. We now test if subjects show a different response depending on word frequency: 
+# include a random slope for Frequency per subject. For simplicity we continue building
+# from mixedModel4.
+lexdec3$cFrequency = scale(lexdec3$Frequency,scale=F) # centering
+mixedModel5 = lmer(RT ~ Trial + NativeLanguage + cFrequency + (1|Subject) + (0+cFrequency|Subject) + (1|Word), 
+                   data=lexdec3)
+summary(mixedModel5) 
+
+# C3. Compare to previous best model (but also make sure the Frequency is centered there)
+mixedModel4 = lmer(RT ~ Trial + NativeLanguage + cFrequency + (1|Subject) + (1|Word), data=lexdec3)
+AIC(mixedModel4) - AIC(mixedModel5) # mixedModel5 is better
+
+
+## EXERCISE 3. Test for a correlation parameter between the random slope for frequency and the random intercept
+# (i.e. test if slower subjects respond in a different way to increasing frequency than faster subjects)
+
+## ANSWER 3:
+mixedModel5c = lmer(RT ~ Trial + NativeLanguage + cFrequency + (1+cFrequency|Subject) + (1|Word), data=lexdec3)
+summary(mixedModel5c) # does not look interesting: -0.06
+AIC(mixedModel5) - AIC(mixedModel5c) # and does not improve the model
+# Note that if you would not have centered, you would have found an (uninformative) higher correlation
+summary(lmer(RT ~ Trial + NativeLanguage + Frequency + (1+Frequency|Subject) + (1|Word), data=lexdec3))
+
+# IMPORTANT REMARK: factorial/binary predictors used as random slope ALWAYS need to be put in the same block 
+#                   (i.e. correlated) with the random intercept (as they are contrasted w.r.t. the intercept).
+
+# C4. Plot the random slopes (based on code on p. 249 of Baayen, 2008)
+myXYPlot(lexdec3,"RT","cFrequency","Subject",mixedModel5)
+
+# C5. Plot the sorted coefficients - from high negative (subjects are very fast for higher frequency words)
+# to less negative (subjects are less fast for higher frequency words)
+par(mfrow=c(1,1))
+myCoefPlot(mixedModel5,"Subject","cFrequency")
+
+# C6. Compare both plots, the first shows the lines, the second only the slope of the line
+myXYPlot(lexdec3,"RT","cFrequency","Subject",mixedModel5)
+x11() # opens new plot window, use quartz() when on Mac OS
+myCoefPlot(mixedModel5,"Subject","cFrequency")
+# alternatively use: par(mfrow=c(1,2)) and then call both plot functions without x11()
+
+# C7. Now we test if the effect of native language varies per word 
+# Since this is a factor variable, it ALWAYS needs to be put in the model together with the random intercept
+# in one block (note this will really NOT converge)
+mixedModel6 = lmer(RT ~ Trial + NativeLanguage + cFrequency + (1|Subject) + (0+cFrequency|Subject) + (1+NativeLanguage|Word), 
+                   data=lexdec3)
+
+# C8. It did not converge. We can now try again with different optimizers. The default optimizer is
+# 'bobyqa'. Another is 'Nelder_Mead':
+mixedModel6a1 = lmer(RT ~ Trial + NativeLanguage + cFrequency + (1|Subject) + (0+cFrequency|Subject) + (1+NativeLanguage|Word), 
+                     data=lexdec3, control = lmerControl(optimizer="Nelder_Mead")) # this does converge
+
+# And another one is the optimizer of the old lme4 (version 0.9):
+mixedModel6a2 = lmer(RT ~ Trial + NativeLanguage + cFrequency+ (1|Subject) + (0+cFrequency|Subject) + (1+NativeLanguage|Word), 
+                     data=lexdec3, control=lmerControl(optimizer="nloptwrap")) # also converges, the other warning can be ignored
+
+# As the two models converged, their summary and AIC is effectively identical
+summary(mixedModel6a1)
+summary(mixedModel6a2) 
+AIC(mixedModel6a1) - AIC(mixedModel6a2)
+
+# If the model would not have converged with any of the optimizers, the next step would be to test the correlated random slope
+# and intercept, and if this also would not have converged, the final step would be to exclude the random slope completely
+# (i.e. stick with mixedModel5) 
+
+# C9. Test if the random slope is necessary
+AIC(mixedModel5) - AIC(mixedModel6a1) # it is indeed necessary
+
+# visualize the random slopes: interesting pattern - non-native speakers are slower for 
+# animal words than fruit words
+myCoefPlot(mixedModel6a1,"Word","NativeLanguageOther") 
+
+
+###### TESTING INTERACTIONS ######
+# D1. We saw that non-native speakers showed a specific pattern in their responses to a word
+# Perhaps this is related to word class, so we add this interaction and see if this 
+# reaches significance and also influences the random slopes
+mixedModel6b = lmer(RT ~ Trial + NativeLanguage + cFrequency + (1|Subject) + (0+cFrequency|Subject) + (1+NativeLanguage|Word), 
+                    data=lexdec3, control = lmerControl(optimizer="Nelder_Mead"), REML=F)
+mixedModel7b = lmer(RT ~ Trial + NativeLanguage * Class + cFrequency + (1|Subject) + (0+cFrequency|Subject) + (1+NativeLanguage|Word), 
+                    data=lexdec3, control = lmerControl(optimizer="Nelder_Mead"), REML=F) 
+
+summary(mixedModel7b) # interaction clearly significant
+
+AIC(mixedModel6b) - AIC(mixedModel7b) # mixedModel7b is an improvement
+
+# D2. perhaps the random slope of NativeLanguage per word can be dropped now? 
+mixedModel7 = lmer(RT ~ Trial + NativeLanguage * Class + cFrequency + (1|Subject) + (0+cFrequency|Subject) + (1+NativeLanguage|Word), 
+                    data=lexdec3, control = lmerControl(optimizer="Nelder_Mead")) # REML=T instead of REML=F
+mixedModel7simpler = lmer(RT ~ Trial + NativeLanguage * Class + cFrequency + (1|Subject) + (0+cFrequency|Subject) + (1|Word), 
+                    data=lexdec3, control = lmerControl(optimizer="Nelder_Mead"))
+AIC(mixedModel7simpler) - AIC(mixedModel7) 
+# < 2, so the simpler model is better (i.e. the more complex model is not better)
+
+# note that the default optimizer works fine for this method as well:
+mixedModel7simpler2 = lmer(RT ~ Trial + NativeLanguage * Class + cFrequency + (1|Subject) + (0+cFrequency|Subject) + (1|Word), 
+                          data=lexdec3)
+AIC(mixedModel7simpler2) - AIC(mixedModel7simpler) # in principle identical, also compare summaries:
+summary(mixedModel7simpler2) 
+summary(mixedModel7simpler)
+
+# D3. Model criticism
+qqp(resid(mixedModel7simpler)) # not perfect at the tails, model criticism is needed
+
+# check heteroscedasticity, no clear increase or decrease in variance should be visible, 
+# at least within solid lines
+plot(scale(resid(mixedModel7simpler)) ~ fitted(mixedModel7simpler), pch='.',cex=2, ylim=c(-5,5))
+abline(h = c(-2.5, 2.5))
+
+# new model with the data points which are problematic for the model removed
+lexdec3b = lexdec3[ abs(scale(resid(mixedModel7simpler))) < 2.5 , ]
+(1-(nrow(lexdec3b))/nrow(lexdec3))*100 # 2.37% removed
+mixedModel7simpler.v2 = lmer(RT ~ Trial + NativeLanguage * Class + cFrequency + (1|Subject) + (0+cFrequency|Subject) + (1|Word), 
+                    data=lexdec3b)
+
+# much better
+qqp(resid(mixedModel7simpler.v2)) 
+
+# heteroscedasticity is also improved
+plot(scale(resid(mixedModel7simpler.v2)) ~ fitted(mixedModel7simpler.v2), pch='.',cex=2, ylim=c(-5,5))
+abline(h = c(-2.5, 2.5))
+
+# D4. Bootstrapping
+library(boot) # if not present: install.packages('boot')
+bs = confint(mixedModel7simpler.v2, method='boot', nsim = 500, level = 0.95)
+bs
+
+
+###### CONCLUDING REMARKS ######
+# REMARK 1: AIC comparisons are only valid when the models have been fitted on 
+#           the same dataset. So if you add a variable with missing values, this
+#           is not the case. When you want to see if the addition of this variable
+#           is necessary, you need to fit the simpler model also on the dataset
+#           where the observations with missing values for the new variable have
+#           been excluded. A simple test to see if no data points have been dropped
+#           when adding a new variable is:
+(length(fitted(mixedModel1)) - length(fitted(mixedModel2))) == 0 # True == OK
+
+# REMARK 2: The explained variance of your model will be very high due 
+#           to the random-effects structure, so optimizing your explained variance 
+#           is not useful. Instead you should compare AIC values. A decrease of at 
+#           least 2 AIC units indicates an improved model.
+#
+# REMARK 3: Look at the graphical results of your model. They may reveal patterns 
+#           suggesting the inclusion of several control variables
+#
+# REMARK 4: Pay close attention to Baayen (2008: Ch 6) on how to interpret interactions
+# 
+# REMARK 5: If interested, take a look at myFunctions.R
+# 
+# REMARK 6: to conduct multiple comparisons (comparing multiple factor levels) the 
+#           the library multcomp can be used as follows:
+#
+# install.packages('multcomp') # if not yet present
+library(multcomp)
+lexdec3$Factor = interaction(lexdec3$Complex,lexdec3$Class)
+model = lmer(RT ~ Trial + Factor + (1|Subject) + (1|Word), data=lexdec3)
+summary(model)
+summary(glht(model,linfct=mcp(Factor = "Tukey"))) # no significant differences among the levels
+
+# REMARK 7: if you have a dependent variable Y which is binary (1: success, 0: failure)
+#           you can follow the same approach as before, but now using logistic regression.
+#           The commands are very similar: you use glmer instead of lmer and specify family:
+#           glmer(Y ~ ..., family='binomial') 
+#           [note that if you need to change the optimizer, use control = glmerControl(...)]
+#           [There is also no REML=... option for binomial models, so you always fit the same type of model.]
+#           [Residuals also do not need to be normally distributed anymore, so model criticism is not necessary.]
+#
+#           Alternatively, for logistic regression, you may also specify your dependent 
+#           variable as the number of successes and the number of failures (e.g., over
+#           a certain time span and stored in columns NrSuccesses and NrFailures) in the following way:
+#           glmer(cbind(NrSuccesses,NrFailures) ~ ..., family='binomial')
+```
+
+<br>
+__Replication of the analysis__
+
+To run all analyses yourself, you first have to install [**pandoc**](http://johnmacfarlane.net/pandoc/), and then you can just copy the following lines to the most recent version of R. You need the packages 'lme4', 'car', 'boot', 'multcomp' and 'rmarkdown'. If these are not installed (the library commands will throw an error), you can uncomment (i.e. remove the hashtag) the first five lines to install them. 
+
+```{r knitr, eval=F}
+#install.packages('lme4',repos='http://cran.us.r-project.org')
+#install.packages('car',repos='http://cran.us.r-project.org')
+#install.packages('boot',repos='http://cran.us.r-project.org')
+#install.packages('multcomp',repos='http://cran.us.r-project.org')
+#install.packages('rmarkdown',repos='http://cran.us.r-project.org')
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture1/lab/answers/lab-including-answers.Rmd', 'lab-including-answers.Rmd')
+library(rmarkdown)
+render('lab-including-answers.Rmd') # generates html file with results
+browseURL(paste('file://', file.path(getwd(),'lab-including-answers.html'), sep='')) # shows result
+```

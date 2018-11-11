@@ -1,0 +1,47 @@
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry} % ERC requires 1.5cm top bottom margin (add a bit for also required header and footer), 2cm left right
+
+\usepackage[greek,english]{babel}
+\usepackage{fourier} % font
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{latexsym}
+\usepackage{amsmath} % for asterisk
+\usepackage{pifont} % dingbats for bullets
+\usepackage{fixltx2e}  % for subscript
+\usepackage{enumerate} % for custom numbered lists
+
+\usepackage{graphicx}  % for insertion of figures
+\usepackage{float} % to position figures precisely using H
+
+\usepackage[square]{natbib}  % for bib style
+
+
+%% for bibliography call
+\newcommand{\user}{apcaines}  % laptop
+%\newcommand{\user}{andrewcaines}  % desktop
+
+
+% make title and author list
+\title{The effect of topic on opportunity of use \\ in the Cambridge Learner Corpus}
+
+\author{Andrew Caines \qquad Paula Buttery \\
+  ALTA Institute for Automated Language Teaching and Assessment \\
+  Department of Theoretical and Applied Linguistics \\
+  University of Cambridge \\
+  {\tt (apc38|pjb48)@cam.ac.uk} \\}
+
+\date{}
+
+
+\begin{document}
+\maketitle
+
+
+
+% requires files: apc.bst, babelbst.tex, englbst.tex
+\bibliographystyle{apc}
+\bibliography{/Users/\user/Dropbox/workspace/gitHub/ALTA/bibliography/bibliography-alta}
+
+\end{document}

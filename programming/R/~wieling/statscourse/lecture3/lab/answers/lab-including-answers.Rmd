@@ -1,0 +1,274 @@
+## STATISTICS COURSE - LAB SESSION 3
+__Martijn Wieling, [http://www.martijnwieling.nl](http://www.martijnwieling.nl)__
+
+
+```{r date1, include=F}
+Sys.setlocale("LC_TIME", "C")
+options(width = 120)
+```
+
+```{r date2, echo=F}
+cat("Generated on:", format(Sys.time(), "%B %d, %Y - %H:%M:%S"))
+```
+
+
+```{r analysis, fig.width=8, fig.height=7}
+# A0. Start R 3.1.2
+# Start R and make sure the libraries mgcv and car are installed
+# Menu: Packages -> Install package(s)...  -> Select mirror -> Select packages
+# or: 
+# install.packages(c("mgcv","car"),repos='http://cran.r-project.org')
+
+# A1. These commands should work when the packages are installed
+library(mgcv)
+library(car)
+
+# version information
+R.version.string
+packageVersion('mgcv')
+packageVersion('car')
+
+# A2. Now download the following files and load the custom functions and data
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture3/lab/myFunctions.R', 'myFunctions.R')
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture3/lab/compareML.R', 'compareML.R')
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture3/lab/dialectdata.rda', 'dialectdata.rda')
+
+source('myFunctions.R') # custom functions
+source('compareML.R') # custom function to compare models
+load('dialectdata.rda') # Dutch dialect data, subset of 48 words
+
+# Note that predictors were standardized and log-transformed when necessary.
+# The dependent (LD) was centered.  
+# 
+# Standardization: scaledA = scale(A)
+# Centering: centeredA = scale(A,scale=F)
+# Log-transform: logA = log(A)
+#                check if necessary with: plot(density(A))
+
+# EXERCISE 1. Investigate the data yourself (use: head, str, nrow)
+# e.g., str(dialectdata) will show you the structure of the dataset
+
+# ANSWER 1: 
+str(dialectdata)
+head(dialectdata)
+nrow(dialectdata)
+summary(dialectdata)
+
+
+##### GENERALIZED ADDITIVE MODELING
+# B1. our first generalized additive model, 
+# Longitude and Latitude have the same scale, so we use s()
+# LD: Levenshtein distance (pronunciation distance) from standard Dutch
+model1 = gam(LD ~ s(Longitude,Latitude), data=dialectdata, method='ML')
+summary(model1)
+
+# B2. we can visualize the partial effect of geography using the function plot
+plot.gam(model1) # shows confidence intervals
+
+# nicer visualization including all effects (note that the intercept is 0, 
+# so this will show the same as the partial effect plot)
+vis.gam(model1, plot.type="contour", color="terrain", too.far=0.05, 
+view=c("Longitude","Latitude"),main="General effect of Geography")
+
+# B3. s() uses thin plate regression splines as basis functions and these 
+#     are generally better (and slower!) than the cubic regression splines used as default by te()
+#     also note that the default wigglyness (specified via 'k') of s(..) is different than that of te(). 
+#     The default maximum degrees of freedom per dimension in te() is 5, whereas the default total maximum 
+#     degrees of freedom of s() is 10 (1 dimension), 30 (2 dimensions) and 110 (3 dimensions). 
+#     A te(..) can be made identical to an s(..) by changing the default basis function and wigglyness
+#     (te(..) is more flexible though, since it also allows combinations of non-isotropic predictors)
+equal1 = gam(LD ~ s(Longitude,Latitude,k=10), data=dialectdata, method='ML')
+equal2 = gam(LD ~ te(Longitude,Latitude,d=c(2),bs="tp",k=10), data=dialectdata, method='ML')
+summary(equal1)
+summary(equal2) # identical to that of equal1
+AIC(equal1) - AIC(equal2) # 0
+
+# B4. We can investigate if the influence of geography differs for different values of word frequency
+# d=c(2,1) indicates that Longitude and Latitude (the first two parameters) are on the same scale, 
+# but the next one (,1) is not
+system.time(model2 <- gam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)), data=dialectdata, method='ML')) # about 30 seconds
+summary(model2)
+
+# B5. Models can be compared using AIC 
+AIC(model1) - AIC(model2) # model2 is better as it has lower AIC (> 2 difference)
+
+# B6. Note that bam is much faster here:
+system.time(model2b <- bam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)), data=dialectdata, method='ML')) # about 3 seconds
+summary(model2b)
+
+# However, the fit is slightly worse than that of gam. So were losing some precision at the benefit of 
+# increased speed and less memory-intensive computations. As soon as you have a reasonably-sized dataset (i.e. > 10,000 rows)
+# you will always use bam. 
+AIC(model2) - AIC(model2b)
+
+# B7. Note that AIC cannot always be used to compare gam/bam models. 
+# When the rho-parameter is used in bam for correcting autocorrelation 
+# (this will be discussed in lecture 4) comparing fixed effects is done via 
+# ML score comparison and random effects via REML score comparison (lower is better).
+# The custom function compareML will test these differences for you. It also shows
+# the AIC difference when appropriate.
+compareML(model2,model2b) # model2 is better
+
+# B8. We can investigate the geographical pattern for word frequency. 
+#     Note that WordFreq is z-transformed and -2 indicates low-frequency words 
+#     (2 SD below the mean) and +2 indicates high-frequency words
+# REMARK: these results seem very different from those reported in the PLOS ONE paper
+#         but remember that this is only a subset of 48 words (out of > 550)
+par(mfrow=c(1,3)) # show 3 plots next to each other
+# in cond=list() the values you'd like to see can be specified 
+vis.gam(model2, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(WordFreq=-2),view=c("Longitude","Latitude"),main="Effect of Geography for LF words")
+vis.gam(model2, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(WordFreq=0),view=c("Longitude","Latitude"),main="Effect of Geography for MF words")
+vis.gam(model2, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(WordFreq=+2),view=c("Longitude","Latitude"),main="Effect of Geography for HF words")
+
+
+# EXERCISE 2. Create a model to investigate the varying effect of geography only depending 
+#             on population age (name the model: model3)
+
+# ANSWER 2:
+model3 = bam(LD ~ te(Longitude,Latitude,PopAge,d=c(2,1)), data=dialectdata, method='ML')
+AIC(model1) - AIC(model3) # better than the simple model
+summary(model3)
+
+
+# EXERCISE 3. Visualize the results of the model
+
+# ANSWER 3:
+range(dialectdata$PopAge) # also z-transformed
+par(mfrow=c(1,3)) # show 3 plots next to each other
+# in cond=list() the values you'd like to see can be specified 
+vis.gam(model3, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(PopAge=-2),view=c("Longitude","Latitude"),main="Effect of Geography for a young population")
+vis.gam(model3, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(PopAge=0),view=c("Longitude","Latitude"),main="Effect of Geography for a medium-aged population")
+vis.gam(model3, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(PopAge=+2),view=c("Longitude","Latitude"),main="Effect of Geography for an old population")
+
+
+# EXERCISE 4. Create a model (don't forget to use bam!) to investigate the geographic variability in the influence 
+#     of word frequency and population age. Name the model: model4.
+#     Hint, make sure to specify that Longitude and Latitude are in the same scale,
+#           but word frequency and population age each have their own scale
+#           To reduce memory requirements use the option: gc.level=2 for bam
+#     Depending on the speed of your laptop this might take a few minutes (on my desktop: 90 seconds)
+
+# ANSWER 4:
+system.time(model4 <- bam(LD ~ te(Longitude,Latitude,WordFreq,PopAge,d=c(2,1,1)), data=dialectdata, method='ML', gc.level=2))
+summary(model4)
+
+# B9. We can investigate this pattern by making a more complex series of plots
+par(mfrow=c(2,2)) # show 2x2 plots 
+
+# in cond=list() the values you'd like to see can be specified 
+vis.gam(model4, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(WordFreq=-2,PopAge=-2),view=c("Longitude","Latitude"),main="Geography: LF + Young")
+vis.gam(model4, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(WordFreq=+2,PopAge=-2),view=c("Longitude","Latitude"),main="Geography: HF + Young")
+vis.gam(model4, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(WordFreq=-2,PopAge=2),view=c("Longitude","Latitude"),main="Geography: LF + Old ")
+vis.gam(model4, plot.type="contour", color="terrain", too.far=0.05, 
+        cond=list(WordFreq=+2,PopAge=2),view=c("Longitude","Latitude"),main="Geography: HF + Old")
+
+# B10. Now we can test if other variables should be added (not interacting with geography).
+#      (For efficiency purposes, we continue working with model2 in this lab session). We first test population count:
+model5 = bam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)) + PopCnt, data=dialectdata, method='ML')
+summary(model5)
+compareML(model2,model5) # model5 has lower AIC and also significantly lower ML scores
+
+
+# EXERCISE 5. What is the interpretation of the effect of population count?
+
+# ANSWER 5: Locations with a higher population have a lower LD 
+#           (i.e. pronunciation distance from standard Dutch)
+
+# EXERCISE 6. Test some other potential variables for inclusion 
+#             (make sure you have enough time for part C.)
+
+# ANSWER 6: (example)
+model5b = bam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)) + PopCnt + IsNoun, data=dialectdata, method='ML')
+summary(model5b) # IsNoun is highly significant
+compareML(model5,model5b) # which also is observable when comparing the simpler model
+
+
+##### Generalized Additive Mixed-Effects Regression
+
+# C1. We first test if we need a random intercept for word (we use bam for speed)
+# Note that method='fREML' does the same as method='REML', it's (generally) just faster.
+model6 = bam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)) 
+                  + PopCnt + s(Word,bs="re"), data=dialectdata, method='fREML')
+
+# C2. We can see immediately if the random intercept is necessary via the summary:
+summary(model6)
+
+# C3. We can also compare the REML scores:
+model5 = bam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)) 
+                  + PopCnt, data=dialectdata, method='fREML')
+compareML(model5,model6)
+
+# C3. We can visualize the random intercepts:
+par(mfrow=c(1,1)) # only one plot in a window
+myCoefPlot.gam(model6,"Word","Intercept")
+
+# C4. We include a random slope for population count per word and evaluate if it improves the model
+model7 = bam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)) 
+                  + PopCnt + s(Word,bs="re") + s(Word,PopCnt,bs="re"), data=dialectdata, method='fREML')
+summary(model7) # the random slope is significant
+compareML(model6,model7) # shows the same pattern, but I generally follow the summary to decide
+                         # if a random slope/intercept needs to be retained
+
+# C5. We can visualize the random slopes:
+myCoefPlot.gam(model7,"Word","PopCnt")
+
+
+# EXERCISE 7. Add a random intercept for Location and visualize the random intercepts
+
+# ANSWER 7:
+model8 = bam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)) 
+                  + PopCnt + s(Word,bs="re") + s(Word,PopCnt,bs="re") + s(Location,bs='re'), 
+             data=dialectdata, method='fREML')
+summary(model8)
+myCoefPlot.gam(model8,"Location","Intercept")
+
+
+# EXERCISE 8. Test if other variables need to be added as predictors to the model, 
+#             and test them also as random slopes. Think carefully about if you 
+#             need to test them as random slopes by word or location. 
+
+# ANSWER 8: (example)
+summary(model8a <- bam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)) 
+                            + PopCnt + s(Word,bs="re") + s(Word,PopCnt,bs="re") + s(Location,bs='re'), 
+                       data=dialectdata, method='ML')) # method='ML' to compare fixed effects
+summary(model9a <- bam(LD ~ te(Longitude,Latitude,WordFreq,d=c(2,1)) 
+                            + PopCnt + IsNoun + s(Word,bs="re") + s(Word,PopCnt,bs="re") + s(Location,bs='re'), 
+                       data=dialectdata, method='ML')) # IsNoun is significant
+compareML(model8a,model9a) 
+# The AIC does not decrease (i.e. the model becomes worse), and the reduction in ML is only limited.
+# I would therefore exclude IsNoun.
+
+
+# FINAL REMARKS: note that the (geographical) results are different than reported in the paper
+# (http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0023613). This is due to 
+# the relatively small dataset (containing less than 10% of the locations).
+#
+# The original dataset and all analyses steps can be found in the paper package: 
+# http://openscience.uni-leipzig.de/index.php/mr2/article/view/44
+#
+# For the Tuscan data presented during the lecture, these can be found here:
+# http://openscience.uni-leipzig.de/index.php/mr2/article/view/41
+```
+<br>
+__Replication of the analysis__
+
+To run all analyses yourself, you first have to install [**pandoc**](http://johnmacfarlane.net/pandoc/), and then you can just copy the following lines to the most recent version of R. You need the packages 'mgcv', 'car' and 'rmarkdown'. If these are not installed (the library commands will throw an error), you can uncomment (i.e. remove the hashtag) the first three lines to install them. 
+
+```{r knitr, eval=F}
+#install.packages('mgcv',repos='http://cran.us.r-project.org')
+#install.packages('car',repos='http://cran.us.r-project.org')
+#install.packages('rmarkdown',repos='http://cran.us.r-project.org')
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture3/lab/answers/lab-including-answers.Rmd', 'lab-including-answers.Rmd')
+library(rmarkdown)
+render('lab-including-answers.Rmd') # generates html file with results
+browseURL(paste('file://', file.path(getwd(),'lab-including-answers.html'), sep='')) # shows result
+```

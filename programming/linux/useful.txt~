@@ -1,0 +1,9 @@
+# decompress .bz2
+bzip2 -d filename.bz2
+
+# tarball
+tar xvf filename.tar
+
+# easy default build
+./configure && make && sudo make install
+

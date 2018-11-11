@@ -1,0 +1,416 @@
+% word count: command line
+% https://tex.stackexchange.com/questions/534/is-there-any-way-to-do-a-correct-word-count-of-a-latex-document
+\$ detex file.tex | wc -w
+
+%%%%%%%%
+% basic document preamble
+
+%% EITHER: Tufte handout
+\documentclass{tufte-handout}
+
+%% OR: normal article
+\documentclass[11pt]{article}
+\special{papersize=210mm,297mm}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}  % set margins
+\usepackage[usenames, dvipsnames]{xcolor}  % colour package (add to document global options if TikZ in use -- loads xcolor and causes an error: http://tex.stackexchange.com/questions/99049/latex-error-option-clash-for-package-xcolor-even-if-i-put-listings-before)
+\usepackage[round]{natbib}  % for citations with round brackets
+
+% no bib, full citations in text
+\usepackage{bibentry}  % \bibentry{foo}
+\nobibliography*
+
+% useful packages
+\usepackage{fourier}  % font
+\usepackage[T1]{fontenc}
+\usepackage{pifont}  % dingbats for bullets
+\usepackage{graphicx}  % insert files
+\graphicspath{{images/}}  % update graphics path search
+\usepackage{float}  % to position figures precisely using H
+\usepackage[nomarkers,figuresonly]{endfloat}  % position figures at end of paper
+\usepackage[english]{babel}
+\usepackage[nodayofweek]{datetime}  % British date format
+\usepackage{hyperref}  % link creation
+%\usepackage[colorlinks=true,linkcolor=blue,urlcolor=NavyBlue,citecolor=Fuchsia]{hyperref}
+\urlstyle{same} % to keep fonts the same for links
+\usepackage{amsmath}  % extended mathematics
+\usepackage{booktabs} % book-quality tables, incl 'merge cells' (see below)
+\usepackage{units}    % non-stacked fractions and better unit spacing
+\usepackage{multicol} % multiple column layout facilities
+\usepackage{lipsum}   % filler text
+\usepackage{fancyvrb} % extended verbatim environments
+  \fvset{fontsize=\normalsize}% default font size for fancy-verbatim environments
+\usepackage{multicol}  % for 2 column layout
+\setlength{\columnsep}{8mm}
+\usepackage{multirow} % for tables
+\usepackage{authblk}  % for authors/affiliations
+\usepackage{longtable} % for the appendix
+\usepackage{arydshln} % for dashed lines in tabular
+\usepackage{lscape} % for landscape pages
+\usepackage{rotating}  % for sideways figures
+\usepackage{enumerate} % for custom numbered lists
+\usepackage[normalem]{ulem} % underline without taking over emph command (then \uline{...})
+\usepackage{parskip}
+%\parskip=0.4\baselineskip \advance\parskip by 0pt plus 1pt
+\usepackage{pdfpages}  % include pdf files
+\usepackage{fixltx2e}  % for subscript text
+
+\usepackage{fixltx2e}  % provides \textsubscript
+\usepackage{array}  % for fixed table width
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\usepackage{graphicx}
+\newcommand*{\cdotLge}{\raisebox{-0.2ex}{\scalebox{1.6}{$\cdot$}}}  % adjust cdot (bullet) size
+
+\usepackage{geometry}
+\geometry{margin=2.5cm}  % set margins
+
+\usepackage{booktabs}
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}  % then specify line spacing required in table env, e.g.
+\begin{table}\centering
+\ra{1.3}
+\begin{tabular}{ll}\toprule
+\begin{tabular}{ | p{2.5cm} | p{1.2cm} | p{3.2cm} | p{3.2cm} | p{3.2cm} | p{1.2cm} | }  % or with paragraph widths specified (m{} or b{} for mid/bottom vertical alignment)
+% change text size for whole table (after \begin{table})
+{\footnotesize
+  \begin{tabular}
+  ...
+  \end{tabular}
+}
+
+\usepackage{scrextend}
+\changefontsizes[20pt]{12pt}  % change line spacing and font size
+
+\usepackage[gen]{eurosym}  % for \euro{} € symbol
+% n.b. \textdollar and \textcent for $ and ¢ symbols, \pounds for £
+
+
+
+%% page header and footer
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[FLE,FRO]{\thepage} % page numbering
+\lhead{\textsc{ALTA: error analysis}}
+\chead{}
+\rhead{Buttery, Caines, Graham \& McCarthy}
+
+% or foot of page numbering
+\pagenumbering{arabic}
+\rfoot{Page \thepage \hspace{1pt} of \pageref{LastPage}}
+
+%% section header formatting (here: Cambridge Blue)
+\usepackage{titlesec}
+\titleformat{\section}
+{\color{BlueGreen}\normalfont\large\bfseries}
+{\color{BlueGreen}\thesection}{1em}{} % text formatting
+\titleformat{\subsection}
+{\color{BlueGreen}\normalfont\normalsize}
+{\color{BlueGreen}\thesubsection}{1em}{} % text formatting
+\titlespacing*{\section}
+{0pt}{24pt}{3pt} % section spacing (left edge, above, below)
+\titlespacing*{\subsection}
+{0pt}{12pt}{3pt} % section spacing (left edge, above, below)
+
+%% for background shading of `code' lines
+%% from: http://tex.stackexchange.com/questions/53941/verbatim-environment-with-background-color-pdflatex-and-tex4ht
+\usepackage{listings,color}
+\definecolor{verbgray}{gray}{0.9}
+\lstnewenvironment{code}{%
+  \lstset{backgroundcolor=\color{verbgray},
+  frame=single,
+  framerule=0pt,
+  basicstyle=\ttfamily,
+  columns=fullflexible}}{}
+% usage
+\begin{code}
+blah
+\end{code}
+
+%% define variable in preamble
+\newcommand{\user}{apcaines}  % laptop
+% and to call it in text just insert:
+\user
+
+%% define title and author block
+\title{\color{BlueGreen}{Clarity, acceptability, appropriateness: a multi-dimensional framework for error analysis}}
+\author{Paula Buttery, Andrew Caines, Calbert Graham, and Michael McCarthy}
+\affil{Institute for Automated Language Teaching \& Assessment (ALTA) \\ Department of Theoretical \& Applied Linguistics \\ University of Cambridge}
+
+
+%%%%%%%%
+%% BEGIN
+\begin{document}
+\maketitle
+
+
+% custom enumerate
+\begin{enumerate}[(A)]
+\item as-is,
+\item less-disfluency, 
+\item less-form-error, 
+\item less-all-error.
+\end{enumerate}
+
+
+% change list indents
+\usepackage{enumitem}
+\begin{itemize}[leftmargin=*]
+\item blah
+\end{itemize}
+
+% set counter in enumerate lists
+\begin{enumerate}
+\setcounter{enumi}{1}  % starts counter at #2
+
+% adjust item spacing in lists
+\begin{itemize}
+\itemsep0em
+\item ...
+
+% compact list
+\usepackage{paralist}  % compact itemize
+\begin{compactitem}
+\item ...
+\end{compactitem}
+
+% change bullet point style in preamble
+% https://texblog.org/2008/10/16/lists-enumerate-itemize-description-and-how-to-change-them/
+\renewcommand{\labelitemii}{$\bullet$}  % change 2nd level itemize from dash to bullet
+
+
+% tables with booktabs
+\begin{tabular}{lllr} 
+\renewcommand{\arraystretch}{1.5}  % adjust spacing between rows
+\toprule
+& \multicolumn{2}{c}{Name} & Grade \\ 
+\midrule
+\multirow{2}{*}{x} & John & Doe & $7.5$ \\  # multirow for n rows, * indicates width (value or natural spacing), x is text
+& Richard & Miles & $2$ \\ 
+\bottomrule 
+\caption{\label{results} Mean parse probabilities }
+\end{tabular}
+
+
+% include graphics as part of figure
+% reqs \usepackage{graphicx} and \usepackage{float} for position H
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=\linewidth]{clc-2009_pos-per-100-words_V.pdf}
+\end{center}
+\caption{\label{refLabelHere} \small pithy caption here}
+\end{figure}
+% turn a Figure to landscape
+% reqs \usepackage{lscape}
+\begin{landscape}
+% figure stuff as above...
+\end{landscape}
+
+% sideways figures
+\begin{sidewaysfigure}
+\centering
+\includegraphics[scale=0.6]{screenshots/whole-map} 
+\caption{The caption of the figure.}
+\label{fig:map}
+\end{sidewaysfigure}
+
+
+% special characters
+$\mu$  % mu
+$\delta$  % delta
+$\neg$  % ¬ negation
+$\langle$ $\rangle$  % left and right angled brackets
+% or in text mode use textcomp package
+\usepackage{textcomp}
+\textlangle \textrangle
+\greektext a \latintext  % alpha
+% package 
+\usepackage{textgreek}
+\textomega  % see http://texblog.org/2012/03/15/greek-letters-in-text-without-changing-to-math-mode/
+\textsigma
+\textmu
+
+\textsuperscript{x}
+\textsubscript{x}  % requires \usepackage{fixltx2e} in preamble
+
+
+% for ACL bibliographies, to ensure casing preserved in journal titles etc
+% in acl.bst file, change:
+{ title ``t'' change.case\$ }
+% for:
+{ title }
+
+
+% include PDF file, reqs \usepackage{pdfpages}
+\includepdf[pages={1}]{myfile.pdf}
+\includepdf[pages={1,3,5}]{myfile.pdf}
+\includepdf[pages={-}]{myfile.pdf}  % all pages
+\includepdfmerge[landscape, nup=1x2]{Admin/AGMs/summary-NTS-CTS-survey_JoMc_2014-09-30.pdf, -, Admin/AGMs/leagues-report_JoMc_2014-09-30.pdf, -}  % list of PDFs, landscape, 1 row 2 col layout (i.e. pages side-by-side)
+
+
+% making author / affiliation blocks, though note post about multiple author affiliations: http://josef.spjut.me/latex/2014/01/03/multiple-author-affiliations-in-latex/
+\usepackage{authblk}  % for authors/affiliations
+\author[1]{author1}  % footnote style
+\author[1]{author2}
+\author[2]{author3}
+\affil[1]{affil1}
+\affil[2]{affil2}
+
+
+% define page margins
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}  % set margins
+
+
+% multi column layout
+\usepackage{multicol}
+\setlength{\columnsep}{8mm}
+\begin{multicols}{2}
+\end{multicols}
+
+
+% no 'abstract' header
+\renewcommand{\abstractname}{\vspace{-\baselineskip}}
+
+
+% insert today's date
+\today
+
+
+% general switch to biblatex bibliographies
+% see http://tex.stackexchange.com/questions/13509/biblatex-for-idiots
+% and https://www.sharelatex.com/blog/2013/07/31/getting-started-with-biblatex.html
+\documentclass{article}
+\usepackage[autocite=footnote,backend=bibtex,style=authoryear,sorting=nyt,maxbibnames=99]{biblatex}
+\addbibresource{<database>.bib}
+\begin{document}
+\cite{<some-ref>}
+\printbibliography
+\end{document}
+% note 8-bit bibtex command
+\$ bibtex8 --wolfgang <filename>
+
+
+% tabbing: http://tex.stackexchange.com/questions/15866/setting-tabs-by-declaration-rather-than-by-example
+\documentclass{article}
+\begin{document}
+\begin{tabbing}
+\hspace*{2cm}\=\hspace*{3cm}\= \kill
+column1a \> column2a \> column3a \\
+column1b \> column2b \> column3b 
+\end{tabbing}
+\end{document}
+
+
+% long underscore
+\underline{\hspace{3cm}}
+
+
+% for Chinese/Japanese characters
+% preamble
+\usepackage[koi8-r,utf8,latin1]{inputenc}  % amended LREC line (commented out above)
+\usepackage{CJKutf8} 
+\usepackage{ucs} 
+\usepackage[encapsulated]{CJK}
+% after begin doc
+\begin{CJK*}{UTF8}{min}
+% end of doc
+\end{CJK*}
+
+% or use 'xelatex' to compile
+\usepackage{xeCJK}
+\setCJKmainfont[BoldFont=FandolSong-Bold.otf]{FandolSong-Regular.otf}
+\setCJKsansfont[BoldFont=FandolHei-Bold.otf]{FandolHei-Regular.otf}
+\setCJKmonofont{FandolFang-Regular.otf}
+\newCJKfontfamily\kaiti{FandolKai-Regular.otf}
+
+
+
+% caret in text mode
+\string^
+
+% tilde
+\textasciitilde
+
+% less than / greater than
+\usepackage[T1]{fontenc}
+\textless
+\textgreater
+
+
+% enclose text in boxes
+\framebox{foo}
+
+
+% longtables
+\usepackage{longtable} % for the appendix
+\usepackage{tabu}
+\usepackage{lscape}  % rotate page
+
+% if two column article clear page
+\newpage
+\onecolumn
+
+\begin{center}
+%\begin{longtable}{|l|l|l|l|}
+\begin{longtabu} to \textwidth {|X[0.4 , p ] |X[0.3, l ] | X[0.9 , l ]| X[1 , l ]|}\firsthline\hline
+\caption[List of features extracted from Weibo posts]{List of features extracted from Weibo posts.} \label{tbl:feats} \\
+
+\hline
+\textbf{Feature} & \textbf{Type} & \textbf{Description} & \textbf{Example} \\
+\hline
+\hline 
+\endfirsthead
+
+\multicolumn{3}{c}%
+{{\bfseries \tablename\ \thetable{} -- continued from previous page}} \\
+\hline
+\textbf{Feature} & \textbf{Type} & \textbf{Description} & \textbf{Example} \\
+\hline
+\hline 
+\endhead
+
+\hline \multicolumn{3}{|r|}{{Continued on next page}} \\ \hline
+\endfoot
+
+\hline
+\endlastfoot
+
+content & . & . & . \\
+
+\end{longtabu}
+\end{center}
+
+
+% adjust paragraph indentation
+\usepackage{lipsum}       % for sample text
+\usepackage{changepage}   % for the adjustwidth environment
+\begin{document}
+\lipsum[1]
+\begin{adjustwidth}{2cm}{}
+\lipsum[1]
+\end{adjustwidth}
+% Following Werner's comment, you could make your environment take an optional argument that would overwrite the default indentation:
+\newenvironment{myenv}[1][2cm]{\begin{adjustwidth}{#1}{}}{\end{adjustwidth}}
+\begin{myenv}
+\lipsum[1]
+\end{myenv}
+
+
+% insert a dagger symbol, i.e. †
+$\dagger$
+
+% pipe symbol
+\usepackage[T1]{fontenc}
+then type pipe as normal |
+
+% normal spacing after full stop
+Prompts are all of the form, \emph{Frag:...}\ (`ask')
+
+
+% IPA symbols: https://www.tug.org/tugboat/tb17-2/tb51rei.pdf
+\usepackage{tipa}
+\textipa{[TIsIzs@maIpieI]}
+\textipa{[Its\*rilijizitutaIp]}
+
+
+% reference a page number
+\pageref{foo}

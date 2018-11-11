@@ -1,0 +1,165 @@
+## STATISTICS COURSE - LAB SESSION 2
+## Martijn Wieling, http://www.martijnwieling.nl
+
+# A0. Start R 3.1.2
+# Start R and make sure the libraries lmer and car are installed
+# Menu: Packages -> Install package(s)...  -> Select mirror -> Select packages
+# or: 
+# install.packages(c("lme4","car","gplots"),repos='http://cran.r-project.org')
+
+# A1. These commands should work when the packages are installed
+library(lme4)
+library(car)
+library(gplots)
+packageVersion('lme4') # tested with version 1.1.7
+
+# A2. Now download the following files and load the custom functions and data
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture2/lab/myFunctions.R', 'myFunctions.R')
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture2/lab/eye.rda', 'eye.rda')
+download.file('http://www.let.rug.nl/wieling/statscourse/lecture2/lab/eyeAll.rda', 'eyeAll.rda')
+
+source('myFunctions.R') # custom functions
+load('eye.rda') # data for mixed-effects regression
+load('eyeAll.rda') # data for making focus plots
+
+# A3. data investigation
+head(eye)
+str(eye)
+nrow(eye) # 1102 Subject-Item combinations (only when SameColor==True)
+plot(density(eye$Age)) # e.g., to investigate distributions
+
+
+# EXERCISE 1. Investigate eyeAll yourself
+
+
+# A4. Investigating focus plots
+myFocusPlot(eyeAll) 
+# open the file 'eyeplots.pdf' to investigate the results, note the multiple pages!
+# use: getwd() to get the folder where the PDF is saved
+
+# A5. Close the file 'eyeplots.pdf' before running myFocusPlot again
+# we will now investigate a split based on definiteness as well
+myFocusPlot(eyeAll, splitDefiniteness=T)
+
+# A6. Close the pdf. It is possible to visualize a certain time window
+myFocusPlot(eyeAll, startTime="TimeOnsetNoun", endTime="TimeOnsetNoun+200")
+myFocusPlot(eyeAll, startTime=500, endTime=2000)
+
+# A7. We can also focus on the Competitor vs. Distractors
+myFocusPlot(eyeAll, startTime=500, endTime=2000, plotTarget=F)
+
+
+###### MIXED-EFFECTS REGRESSION: RANDOM INTERCEPTS AND SLOPES ######
+
+# B1. We create our first multiple regression model (no fixed-effects yet)
+model  = lmer( FocusDiff ~ (1|Subject) + (1|Item) , data = eye )
+
+# B2. Look at the results of the model, note the 0 variance of the Items
+summary(model)
+
+# B3. Plot the random intercepts
+myInterceptPlot(eye,"FocusDiff","TrialID","Subject",model) # for subjects
+x11() # use quartz() when on Mac OS
+myInterceptPlot(eye,"FocusDiff","TrialID","Item",model) # for items
+
+# B4. Is a by-item analysis necessary?
+model1 = lmer(FocusDiff ~ (1|Subject),  data=eye)
+model2 = lmer(FocusDiff ~ (1|Subject) + (1|Item),  data=eye)
+AIC(model1) - AIC(model2) # < 2, so no
+
+# B5. Trying to add a fixed effect factor for Color
+# Note this will return a warning as the column is constant in this subset
+model3 = lmer(FocusDiff ~ SameColor + (1|Subject), data=eye)
+
+# B6. Adding the contrast between men and women: IsMale
+model4 = lmer(FocusDiff ~ IsMale + (1|Subject), data=eye)
+summary(model4)
+# It is close to absolute value of 2, so we keep it in for now,
+# if it is n.s. in our final model, we drop it.
+
+
+# EXERCISE 2: Why does it not make sense to vary the effect of IsMale 
+#     per Subject as a random slope? 
+#     Would it make sense to vary it per item instead?
+#     (If Item would have been required as a random-effect factor.) 
+
+
+# B7. We investigate the effect of gender competitor and target gender:
+model5 = lmer(FocusDiff ~ IsMale + TargetNeuter + SameGender + (1|Subject), 
+              data=eye)
+summary(model5) # both not significant
+
+# B8. We investigate the interaction between gender competitor 
+#     and target gender:
+model6 = lmer(FocusDiff ~ IsMale + TargetNeuter * SameGender + (1|Subject), 
+              data=eye)
+summary(model6) # both significant, as well as their interaction
+
+# B9. Preparing for the test if the interaction is necessary 
+#     (note the REML=F as we are comparing fixed effects) 
+model4b = lmer(FocusDiff ~ IsMale + (1|Subject), data=eye, REML=F)
+model6b = lmer(FocusDiff ~ IsMale + TargetNeuter * SameGender + (1|Subject), 
+               data=eye, REML=F)
+
+
+# EXERCISE 3. Do we need the interaction (i.e. compare model4b and model6b)?
+
+
+# B10. We need to test if their inclusion as a random slope is necessary 
+# and influences the significance as fixed effects (in the interaction or 
+# separately). 
+model6 = lmer(FocusDiff ~ IsMale + TargetNeuter * SameGender + (1|Subject), 
+              data=eye)
+model7 = lmer(FocusDiff ~ IsMale + TargetNeuter * SameGender + 
+              (1 + TargetNeuter * SameGender|Subject), data=eye)
+
+summary(model7)
+AIC(model6) - AIC(model7) # not better
+
+# B11. Add the factor TargetColor to the best previous model (model6)
+model8 = lmer(FocusDiff ~ IsMale + TargetNeuter * SameGender + TargetColor + 
+               (1|Subject), data=eye)
+summary(model8) # it appears we need a contrast for brown
+eye$TargetBrown = (eye$TargetColor == "brown")*1 # 1 if brown, 0 otherwise
+
+
+# EXERCISE 4. Add the contrast TargetBrown to the best previous model (model6)
+#             and test if the model is better than the more complex model (model8).
+#             Store the model as model9.
+
+# B12. To get an estimate of the performance of your model use:
+#      (including the variation explained by the random structure)
+cor(eye$FocusDiff, fitted(model9))^2
+
+
+# EXERCISE 5. Investigate if other parameters (e.g., age) included in the 
+#             dataset (colnames(eye) shows the columnnames) should be included
+#             as fixed effects. When including a variable as fixed effect
+#             always test if it also has to be included as a random slope
+#             (if it varies per subject). 
+
+
+# B13. Model criticism (on the basis of model9)
+qqp(resid(model9)) # not normal
+
+# no heteroskedasticity, but this is due to the bounded nature of the 
+# dependent variable (always between -100 and 100)
+plot(scale(resid(model9)) ~ fitted(model9), pch='.',cex=2, ylim=c(-5,5))
+abline(h = c(-2.5, 2.5))
+
+eye2 = eye[ abs(scale(resid(model9))) < 2 , ]
+(1-(nrow(eye2))/nrow(eye))*100 # 0.36% removed
+model9.v2 = lmer(FocusDiff ~ IsMale + TargetNeuter * SameGender + TargetBrown + 
+               (1|Subject), data=eye2)
+cor(eye$FocusDiff, fitted(model9))^2 
+cor(eye2$FocusDiff, fitted(model9.v2))^2 # improved prediction
+qqp(resid(model9.v2)) # unfortunately, residuals not much better 
+
+# The problem with the residuals might be caused by by our choice of 
+# dependent variable here (which is essentially bounded by the 
+# time span we are looking at), so a better approach would 
+# be to predict for every point in time if someone is looking at
+# the target or not (or a certain distance from the target), 
+# and then take into account time in the 
+# analysis. We will illustrate an analysis which takes into
+# account a time-signal in the fourth lecture of this course.
