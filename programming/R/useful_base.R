@@ -543,3 +543,13 @@ hash[[k1]][[k2]] <- 'bar'
 for (key in ls(hash)) {  # loop thru keys
   print(hash[[key]])
 }
+
+
+## make your own library
+# see https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch
+library(devtools)
+library(roxygen2)
+setwd('root/of/local/library')
+document()
+setwd('..')
+install('nameOfLibrary')
