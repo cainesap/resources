@@ -1,9 +1,0 @@
-# what's my config (and why)?
-$ git config --list --show-origin
-
-# clone a public repo
-git clone https://github.com/cainesap/foo.git
-
-# connect to a private repository
-# see https://support.cloudways.com/using-git-command-line-ssh
-# 1, ssh-keygen; 2, add to repo settings; 3, git clone with ssh (git clone git@github.com:cainesap/bar.git)

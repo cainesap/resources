@@ -1,4 +1,0 @@
-new theme:
-go to Appearance > Editor
-comment out comments template in Page Template
-comment out power by WP in footer
