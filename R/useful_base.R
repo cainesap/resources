@@ -553,3 +553,11 @@ setwd('root/of/local/library')
 document()
 setwd('..')
 install('nameOfLibrary')
+
+
+## time a job
+library(tictoc)
+tic('Sleeping')
+Sys.sleep(60)
+toc()
+# see also: https://www.r-bloggers.com/5-ways-to-measure-running-time-of-r-code
