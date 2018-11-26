@@ -410,6 +410,11 @@ mkdir key_backup
 cp id_rsa* key_backup
 # make a new key
 ssh-keygen -t rsa -C "your_email@example.com"
-
+# add to ssh-agent (on Linux only?)
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa
 ## copy public key
 pbcopy < ~/.ssh/id_rsa.pub
+
+# ssh reset
+ssh -o StrictHostKeyChecking=No foo.bar.com
