@@ -32,3 +32,7 @@ git add foo.bar
 git commit -m 'commit message'
 git push origin master
 
+# switch from HTTPS to URL connection to repo (i.e. if you already cloned from HTTPS)
+git remote -v
+git remote set-url origin git@github.com:cainesap/ccc_nlip.git
+git remote v-
