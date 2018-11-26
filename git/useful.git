@@ -1,9 +1,34 @@
 # what's my config (and why)?
 $ git config --list --show-origin
 
-# clone a public repo
+# clone a public repo using HTTPS
 git clone https://github.com/cainesap/foo.git
 
+# soft reset
+git reset HEAD^
+
+# hard reset
+git fetch --all
+git reset --hard origin/master
+
 # connect to a private repository
-# see https://support.cloudways.com/using-git-command-line-ssh
-# 1, ssh-keygen; 2, add to repo settings; 3, git clone with ssh (git clone git@github.com:cainesap/bar.git)
+# see https://help.github.com/articles/connecting-to-github-with-ssh/
+# 0, check existing keys
+ls -al ~/.ssh
+# 1, ssh-keygen defaults to id_rsa
+ssh-keygen -t rsa -b 4096 -C "cainesap@gmail.com"
+# 2, add private key to ssh-agent
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa
+# 3, add to GitHub account
+# copy public key id_rsa.pub
+# Settings > SSH and GPG keys > New SSH key: paste public key
+# 4, test SSH connection, reset SSH keys
+ssh -o StrictHostKeyChecking=No -T git@github.com
+# 5, git clone with ssh
+git clone git@github.com:cainesap/foobar.git
+# 6, try to push
+git add foo.bar
+git commit -m 'commit message'
+git push origin master
+
