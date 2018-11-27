@@ -36,3 +36,12 @@ git push origin master
 git remote -v
 git remote set-url origin git@github.com:cainesap/ccc_nlip.git
 git remote v-
+
+# push an existing repo to GitHub
+# start a new repository on github.com
+# in working dir:
+git init
+git add .
+git commit -m 'first commit'
+git remote add origin https://github.com/cainesap/NAME_OF_REPO.git
+git push origin master
