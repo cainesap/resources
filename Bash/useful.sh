@@ -390,7 +390,8 @@ for i in {1..5000}; do echo $i; Rscript annotateTrainingData_rasp.R; done
 ## prevent auto backups in emacs
 # https://stackoverflow.com/questions/151945/how-do-i-control-how-emacs-makes-backup-files
 $ emacs ~/.emacs.d/init.el
-"(setq make-backup-files nil)"
+# add
+(setq make-backup-files nil)
 
 
 ## Unicode: check for non-ASCII characters
