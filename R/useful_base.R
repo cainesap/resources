@@ -1,3 +1,11 @@
+# ENVIRONMENT
+
+# in ~/.bash_profile
+alias R='R --no-save'
+
+
+#####
+
 # check R version number
 R.Version()
 

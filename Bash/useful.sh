@@ -387,6 +387,9 @@ RANDNUM=$((1 + RANDOM * 10))
 for i in {1..5000}; do echo $i; Rscript annotateTrainingData_rasp.R; done
 
 
+## do not open the GUI in Emacs: in ~/.bash_profile
+alias emacs='emacs -nw'
+
 ## prevent auto backups in emacs
 # https://stackoverflow.com/questions/151945/how-do-i-control-how-emacs-makes-backup-files
 $ emacs ~/.emacs.d/init.el
