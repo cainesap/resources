@@ -564,6 +564,11 @@ install('nameOfLibrary')
 
 
 ## time a job
+starttime <- Sys.time()
+Sys.sleep(60)
+endtime <- Sys.time()
+endtime - starttime
+# or
 library(tictoc)
 tic('Sleeping')
 Sys.sleep(60)
