@@ -574,3 +574,10 @@ tic('Sleeping')
 Sys.sleep(60)
 toc()
 # see also: https://www.r-bloggers.com/5-ways-to-measure-running-time-of-r-code
+
+
+## parallelization
+library(parallel)
+library(doSNOW)
+library(foreach)
+# see https://garthtarr.com/parallel-computation-in-r
