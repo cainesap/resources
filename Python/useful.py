@@ -499,3 +499,15 @@ set(mylist)
 # index of element in set / list
 list(set).index('foo')
 
+## NOTES
+# Installing Python 2 and 3 http://joebergantine.com/blog/2015/apr/30/installing-python-2-and-python-3-alongside-each-ot/
+
+# Python for Linguists (Dirk) https://github.com/dirkhovy/python_for_linguists
+
+# Good logging practice (not print statements) http://victorlin.me/posts/2012/08/26/good-logging-practice-in-python
+
+# Implementing Principal Component Analysis in Python http://sebastianraschka.com/Articles/2014_pca_step_by_step.html
+
+# PDF concatenation https://pythonhosted.org/PyPDF2/Easy%20Concatenation%20Script.html
+
+# pathlib for file path operations https://medium.com/@ageitgey/python-3-quick-tip-the-easy-way-to-deal-with-file-paths-on-windows-mac-and-linux-11a072b58d5f, https://twitter.com/randal_olson/status/959112885237460992

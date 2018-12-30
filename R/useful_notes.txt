@@ -1,0 +1,160 @@
+Make a package
+http://www.masalmon.eu/2017/12/11/goodrpackages
+https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch
+http://r-pkgs.had.co.nz
+
+Efficient R programming (book) https://csgillespie.github.io/efficientR
+
+roperators for ‘nicer’ R code https://www.r-bloggers.com/make-your-r-code-nicer-with-roperators
+
+R stats models + machine learning https://m-clark.github.io/documents
+
+Greta: Bayesian models using TensorFlow in R https://greta-dev.github.io/greta
+
+R regex
+https://www.rstudio.com/wp-content/uploads/2016/09/RegExCheatsheet.pdf
+
+R Markdown
+R Markdown with floating menu, folding code, tabbed plots: http://blog.rstudio.org/2016/03/21/rmarkdown-v0-9-5/
+R notebooks: http://rmarkdown.rstudio.com/r_notebooks.html
+
+R Bookdown https://github.com/rstudio/bookdown
+
+Shiny
+debugging: plug-in to see element IDs http://blog.mckuhn.de/2016/04/display-element-ids-for-debugging-shiny.html
+
+Datasets
+https://vincentarelbundock.github.io/Rdatasets/datasets.html
+
+Data collection
+rvest: Hadley web scraping https://github.com/hadley/rvest
+Twitter processing https://github.com/vanatteveldt/learningr
+Twitter streaming https://mkearney.github.io/rtweet
+- example of rtweet use: http://www.masalmon.eu/2017/05/20/billnye
+
+NLP
+NLP package directory: https://cran.r-project.org/web/views/NaturalLanguageProcessing.html
+stringdist: calculate string distances (including phonetic string cp) http://www.r-bloggers.com/stringdist-0-8-now-with-soundex, https://github.com/markvanderloo/stringdist
+phonics: phonetic spelling algorithms https://cran.r-project.org/web/packages/phonics/index.html, https://github.com/masalmon/Ropenaq
+hunspell: spellchecker, add new langs (write vignette @ma_salmon @opencp) https://github.com/jeroenooms/hunspell, https://www.opencpu.org/posts/hunspell-1-2/
+sentiment analysis: http://www.rblog.uni-freiburg.de/2017/02/21/sentiment-analysis-in-r
+Lang ID e.g. http://www.masalmon.eu/2017/06/10/rolandgarros
+
+Language models
+Individual differences and fitting many models: https://jofrhwld.github.io/blog/2016/05/01/many_models.html
+cmscu C++ n-gram analysis http://link.springer.com/article/10.3758/s13428-016-0766-5
+
+R from Excel
+http://www.r-bloggers.com/introduction-to-r-for-excel-users/
+
+Geoparser: identifies places mentioned in texts, disambiguates, and returns geo data https://github.com/masalmon/geoparser
+
+Normalised frequency difference estimator (Bentz et al) https://github.com/dimalik/nfd
+
+On set.seed() http://www.masalmon.eu/2017/04/12/seeds
+
+CorporaCoCo: Corpora Co-occurrence Comparison (U.Brum) https://cran.r-project.org/web/packages/CorporaCoCo/index.html
+
+Secrets password storage http://blog.revolutionanalytics.com/2017/07/secret-package.html
+
+here() rather than setwd()
+
+machine vision & camera controller https://github.com/swarm-lab/Rvision
+
+programmatic ggplot http://katiejolly.io/blog/2018-02-05/aes-string, http://ggplot2.tidyverse.org/reference/aes_.html
+
+scraping tweets https://www.r-bloggers.com/scraping-twitter-data-to-visualize-trending-tweets-in-kuala-lumpur
+
+blog on DAGs https://www.r-bloggers.com/applications-of-dags-in-causal-inference
+
+~Tidyverse~
+tsibble: time series tables http://pkg.earo.me/tsibble/index.html
+infer: stats http://infer.netlify.com
+tidygraph: network graphs https://www.data-imaginist.com/2017/introducing-tidygraph
+sf: spatial data + mapping https://cran.r-project.org/web/packages/sf/vignettes/sf1.html
+seq_len(n)
+sample_n(df)
+sample_frac(df)
+ntile(vec, n)
+n_distinct(vec)
+between(vec, lower, upper)
+
+
+GRAPHICS
+
+Wes Anderson colour palettes: https://github.com/karthik/wesanderson/blob/master/README.md
+
+ggplot subtitles: http://rud.is/b/2016/03/12/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/
+
+ggrepel: repel overlapping text labels in ggplot
+https://github.com/slowkow/ggrepel
+
+tweenr: interpolate your data between different states (i.e. animated plots) https://github.com/thomasp85/tweenr
+
+ggalt: extra coordinate systems, geoms, statistical transformations for ggplot2, including coord_proj updated world map https://github.com/hrbrmstr/ggalt
+
+supreme.r: ggplot annotations https://gist.github.com/hrbrmstr/283850725519e502e70c
+
+ggtree tree diagrams http://www.r-bloggers.com/label-edge-number-in-ggtree-5/
+
+emojifont in charts (including ggtree) https://cran.r-project.org/web/packages/emojifont/vignettes/emojifont.html
+
+label ggplot facets https://twitter.com/KristenSauby/status/743844594928934912
+
+filepath here_here package https://github.com/jennybc/here_here/blob/master/README.md
+
+ggedit ggplot GUI editor https://github.com/yonicd/ggedit
+
+R matrix code: http://www.datasciencenotes.com/2017/02/data-science-trolling-at-airport-using.html
+for (i in 1:1000000) {
+print(floor(runif(70)*10))
+Sys.sleep(.05)
+}
+
+ggimage https://github.com/GuangchuangYu/ggimage
+
+ggiraph for ggplot animation (in Shiny) https://github.com/davidgohel/ggiraph
+
+Data viz for social good (includes plotting conf intervals) https://www.r-bloggers.com/data-analytics-for-societal-good
+
+ggnet nework viz http://www.coppelia.io/2014/08/introducing-r2d3
+
+R2D3 http://www.coppelia.io/2014/08/introducing-r2d3
+
+50 best ggplots http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html
+
+ggbeeswarm for boxplot data points: https://github.com/eclarke/ggbeeswarm
+
+ggforce additional ggplot functionality https://cran.r-project.org/web/packages/ggforce/vignettes/Visual_Guide.html
+
+Arranging subplots with ggplot2 https://www.r-bloggers.com/arranging-subplots-with-ggplot2/amp
+
+Example of colour ‘tiles’ plot using geom_bar() https://theawl.com/every-color-of-cardigan-mister-rogers-wore-from-1979-2001-83c1faba2677
+
+‘skim' summary stats https://github.com/ropenscilabs/skimr
+
+add significance values to plots https://www.r-bloggers.com/add-p-values-and-significance-levels-to-ggplots/
+
+viridis colour palettes https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
+
+magick image editing, animation, plotting https://cran.r-project.org/web/packages/magick/vignettes/intro.html
+
+ggplot theme editor https://bchartoff.shinyapps.io/ggShinyApp
+
+ggjoy https://cran.r-project.org/web/packages/ggjoy/vignettes/introduction.html -> ggridges http://serialmentor.com/blog/2017/9/15/goodbye-joyplots
+
+visualising a text classifier https://kkulma.github.io/2018-01-26-Trump-VS-Clinton-Interpretable-Text-Classifier
+
+gghighlight https://yutani.rbind.io/post/2017-10-06-gghighlight
+
+cow plot for internet https://gist.github.com/clauswilke/e5b35503a434e88a24d5fa4f0a41256f
+
+Raincloud plots (and the suggestiveness of violin plots) https://micahallen.org/2018/03/15/introducing-raincloud-plots
+
+Use dplyr::case_when as a filter for ggrepel labels https://twitter.com/rensa_co/status/976340414016843776
+
+Ggplot animation fade and shrink https://twitter.com/thomasp85/status/991293902895353858
+
+Waterfall bar charts https://github.com/brodieG/ggbg
+
+publication ready ggplot (e.g. add significance values) https://www.r-bloggers.com/add-p-values-and-significance-levels-to-ggplots
