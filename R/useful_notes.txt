@@ -1,3 +1,5 @@
+Project directory structure https://twitter.com/DrBrocktagon/status/1001452039535083520
+
 Make a package
 http://www.masalmon.eu/2017/12/11/goodrpackages
 https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch
