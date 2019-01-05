@@ -1,0 +1,20 @@
+# move to ~/.Rprofile; install.packages('fortunes')
+
+# welcome message
+if (interactive())
+  try(fortunes::fortune(), silent=T)
+
+# avoid + symbols in run-on commands
+options(continue=' ')
+
+# set preferred package repository
+local({
+  r=getOption('repos')
+  r['CRAN']='https://cloud.r-project.org'
+  options(repos=r)
+})
+
+# update packages (with prompt)
+.Last = function() {
+  utils::update.packages(ask=T)
+}
