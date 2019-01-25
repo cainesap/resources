@@ -282,7 +282,7 @@ cat("Press [enter] to continue")  # n.b. print() doesn't work for this
 line <- readline()
 
 # wait for user input in interactive() == FALSE session (i.e. running script from cmd line)
-response <- readLines(file("stdin"), n = 1L)
+response <- readLines(file("stdin"), n=1L)
 print(response)
 
 # a function to check whether session is interactive
@@ -305,7 +305,7 @@ unlist(strsplit(foo, "\\."))[2]  # split on fullstops, specifying which item in 
 
 # prompt user input
 print("Press any key to continue...")
-response <- readLines(file("stdin"), n = 1L)
+response <- readLines(file("stdin"), n=1L)
 
 
 # substring
