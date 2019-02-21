@@ -225,6 +225,9 @@ sed -i .bak 's/hello/bonjour/' greetings.txt
 # or 'zero length extension' for no back up
 sed -i '' 's/hello/bonjour/' greetings.txt
 
+# return matched string
+echo "foo" | sed 's/^(.)/\1/'
+
 # sed in place by line number
 LINENUM=3
 gsed -i '${LINENUM}s/ad.|just/adv_just|retro/' $FILE
