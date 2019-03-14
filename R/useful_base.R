@@ -229,7 +229,7 @@ gsub("\xea", "'", chi$cpm_sentences[4], perl=T)  # greedy
 regmatches(ppx, regexpr("[0-9\\.]+", ppx, perl=T))
 
 # greedy and inverse matching
-regmatches(ppx, gregexpr("[0-9\\.]+", ppx, perl=T), inverse=T)
+regmatches(ppx, gregexpr("[0-9\\.]+", ppx, perl=T), invert=T)
 
 
 # read.csv: if numbers are quoted with commas ("30,000"), read 'as.is' and convert to numeric with gsub()
