@@ -147,7 +147,7 @@ bp + scale_fill_discrete(name="Experimental\nCondition",
                          labels=c("Control", "Treatment 1", "Treatment 2"))
 
 # omit legend
-theme(legend.position = 'none')
+theme(legend.position='none')
 # n.b. to avoid extra legends popping up (size, alpha, etc), place them _outside_ aes(), i.e. --
 ggplot(clc, aes(x = wordcount, group = cefr, fill = cefr)) + geom_density(alpha = 1/2, size = 2)
 
