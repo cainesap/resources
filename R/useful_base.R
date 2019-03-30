@@ -154,6 +154,9 @@ write.table(format(dfOut, digits = 5), file = filepath, sep="\t", quote = FALSE,
 # write csv
 write.table(df, filepath, sep = ",", quote = T, row.names = F)
 
+# add an empty line to file
+cat('\n', file=foo.txt, append=T)
+
 
 # if else
 if (machine == "desktop") print("ack") else print("yack")
