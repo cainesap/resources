@@ -596,3 +596,15 @@ rep(1:4, each = 2, times = 3)  # length 24, 3 complete replications
 
 # cut function to bin continuous values
 cut(values, seq(0,5,1), include.lowest=T)
+
+
+# plyr: round_any (note floor and ceiling)
+round_any(135, 10)
+round_any(135, 100)
+round_any(135, 25)
+round_any(135, 10, floor)
+round_any(135, 100, floor)
+round_any(135, 25, floor)
+round_any(135, 10, ceiling)
+round_any(135, 100, ceiling)
+round_any(135, 25, ceiling)
