@@ -608,3 +608,9 @@ round_any(135, 25, floor)
 round_any(135, 10, ceiling)
 round_any(135, 100, ceiling)
 round_any(135, 25, ceiling)
+
+
+# stringi: character encoding detection and conversion
+library(stringi)
+stri_enc_detect('foobar')
+stri_encode(str, from='ISO-8859-1', to='UTF-8)
