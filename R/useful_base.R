@@ -609,6 +609,11 @@ round_any(135, 10, ceiling)
 round_any(135, 100, ceiling)
 round_any(135, 25, ceiling)
 
+# note that halfway rounds down (i.e. 1.25 rounded to nearest .5 is 1)
+# e.g. round to nearest .5
+round_any(1.25+.01, .5)
+round_any(1.24+.01, .5)
+
 
 # stringi: character encoding detection and conversion
 library(stringi)
