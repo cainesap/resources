@@ -614,3 +614,17 @@ round_any(135, 25, ceiling)
 library(stringi)
 stri_enc_detect('foobar')
 stri_encode(str, from='ISO-8859-1', to='UTF-8)
+
+
+# xml2: unescape html/xml https://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
+unescape_xml <- function(str){
+  xml2::xml_text(xml2::read_xml(paste0("<x>", str, "</x>")))
+}
+
+unescape_html <- function(str){
+  xml2::xml_text(xml2::read_html(paste0("<x>", str, "</x>")))
+}
+# e.g.
+unescape_xml("3 &lt; x &amp; x &gt; 9")
+unescape_html("&euro; 2.99")
+
