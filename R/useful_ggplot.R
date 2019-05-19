@@ -220,3 +220,8 @@ cambbox <- c(left = -0.4, bottom = 51.8, right = 0.8, top = 52.5)
 cambridge <- get_stamenmap(cambbox, zoom = 10, maptype = 'watercolor')
 camblabs <- get_stamenmap(cambbox, zoom = 10, maptype = 'toner-labels')
 ggmap(cambridge) + inset_ggmap(camblabs)
+
+
+# horizontal boxplots
+library(ggstance)
++ geom_boxploth()
