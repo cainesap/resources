@@ -59,6 +59,9 @@ for (log in logs){
     # do something with df
 }
 
+# ignore speech marks in file
+read.delim(..., quote='')
+
 
 # check if file exists
 if (file.exists(filein)) { foo }
