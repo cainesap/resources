@@ -38,6 +38,15 @@ if [ "$foo" == "foo" ]; then
     :
 fi
 
+# floating point comparison
+# https://stackoverflow.com/questions/8654051/how-to-compare-two-floating-point-numbers-in-bash
+DUR1=10
+DUR2=5
+if (( $(echo "$DUR2 > $DUR1" |bc -l) )); then
+    echo "foobar"
+fi
+
+
 
 # printf
 printf "."
@@ -70,9 +79,9 @@ while [  $COUNTER -lt 10 ]; do
 done
 
 # if equals
-if [ $VAR -eq 0 ]; do
+if [ $VAR -eq 0 ]; then
     echo "foo"
-done
+fi
 
 # IF/ELSE + evaluate variable as string (note whitespace)
 if [ "$CP" == "c" ]; then
@@ -425,3 +434,8 @@ pbcopy < ~/.ssh/id_rsa.pub
 
 # ssh reset
 ssh -o StrictHostKeyChecking=No foo.bar.com
+
+
+# length of soundfile with sox
+sox out.wav -n stat 2>&1 | sed -n 's#^Length (seconds):[^0-9]*\([0-9.]*\)$#\1#p'
+
