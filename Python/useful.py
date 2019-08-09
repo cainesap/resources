@@ -473,6 +473,16 @@ for i in xrange(100):
     else:
         d[key] = 1
 
+# nested dictionaries
+people = {1: {'name': 'John', 'age': '27', 'sex': 'Male'},
+          2: {'name': 'Marie', 'age': '22', 'sex': 'Female'}}
+people[3] = {}
+people[3]['name'] = 'Luna'
+people[3]['age'] = '24'
+people[3]['sex'] = 'Female'
+people[3]['married'] = 'No'
+print(people[3])
+
 
 # test performance speed
 from timeit import timeit
