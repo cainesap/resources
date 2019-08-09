@@ -108,6 +108,10 @@ for file in glob.glob("*.txt"):
 import os
 os.path.exists(file_path)
 
+# make directory
+os.mkdir(file_path)
+
+
 # check file size >0
 import os
 os.stat(file_path).st_size
