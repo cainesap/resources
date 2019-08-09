@@ -402,6 +402,7 @@ a = adict.get('dogname', default)
 
 # iterate thru keys (and values): http://stackoverflow.com/questions/3294889/iterating-over-dictionaries-using-for-loops-in-python
 for key in dict:
+for key in sorted(dict):
 for key, value in dict.iteritems():
 
 
