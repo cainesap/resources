@@ -74,8 +74,8 @@ dir(obj)
 # take a system argument: remember that sys.argv[0] is the script name! (so length of args will always be >=1)
 import sys
 if len(sys.argv) > 1:
-    print( "~ Script: " + sys.argv[0] )
-    print( "~ Arg   : " + sys.argv[1] )
+    print( "~ Arg1: " + sys.argv[1] )
+    print( "~ Arg2   : " + sys.argv[2] )
 else:
     print(" No arguments ")
 
