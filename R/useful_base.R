@@ -414,9 +414,9 @@ predictorsTrans = data.frame(trans = predict(trans, predictors))
 ## convert numbers from scientific
 format(n, scientific=F)
 
-## pretty numbers
+## pretty print big large numbers
 r <- c("76491283764.97430", "29.12345678901", "-7.1234", "-100.1","1123")
-formatC(r, big.mar = ",", format = "f", digits = 0)
+formatC(r, big.mar=",", format="f", digits=0)
 
 
 ## add new column to df conditional on existing column
