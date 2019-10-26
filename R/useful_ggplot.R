@@ -162,6 +162,7 @@ theme(text=element_text(family='Georgia'))
 # axis label position (with 0.5 being centre / default, 0 to left horizontally or edge of plot vertically, 1 to right horizontally or edge of labels vertically)
 theme(text=element_text(hjust=0.5, vjust=0.1))
 theme(text=element_text(angle=90, hjust=1, vjust=0.5))  # turn text 90º
+theme(text=element_text(angle=-90, hjust=0, vjust=0.5))  # turn text -90º
 
 # axis labels x/y specifically
 theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.1))
