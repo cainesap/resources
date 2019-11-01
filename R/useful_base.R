@@ -189,6 +189,10 @@ ls <- system("ls", intern = TRUE)
 timestamp <- Sys.time()
 date <- format(Sys.Date(), format="%Y-%m-%d")
 
+# with time
+format(Sys.time(), format="%Y-%m-%d_%H:%M:%S")
+
+
 # get current year
 as.integer(format(Sys.Date(), "%Y"))
 
