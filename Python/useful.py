@@ -346,6 +346,10 @@ len(panda)
 # note panda enumerate starts at 0, so final row is
 len(panda)-1
 
+# subset rows of df (remember python stop bound is 1 less than the number you give)
+panda[1:10]
+panda[10:len(panda)]
+
 # panda to CSV
 df.to_csv(file_name, encoding='utf-8', index=False)
 
