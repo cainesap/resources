@@ -341,6 +341,11 @@ print "number of tokens loaded:", len(panda)
 print(panda.columns.values[0])  # column name
 print(panda.iloc[0][0])  # value of row1 col1
 
+# n.rows in panda
+len(panda)
+# note panda enumerate starts at 0, so final row is
+len(panda)-1
+
 # panda to CSV
 df.to_csv(file_name, encoding='utf-8', index=False)
 
