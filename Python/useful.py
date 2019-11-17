@@ -40,7 +40,7 @@ print(end-start)
 import tweepy
 tweepy.__version__
 # or command line
-$ python -c "import lxml; print lxml.__version__"
+$ python -c "import lxml; print(lxml.__version__)"
 # or with pip
 sudo pip freeze | grep nltk
 
