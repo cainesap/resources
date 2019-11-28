@@ -276,7 +276,9 @@ open -a /Applications/Audacity/Audacity.app/Contents/MacOS/Audacity foo.wav
 Ctrl-Z  # suspends job
 jobs  # lists suspended jobs
 fg %1  # restarts job #1
-http://stackoverflow.com/questions/20649783/pause-a-running-script-in-mac-terminal-and-then-resume-later
+#http://stackoverflow.com/questions/20649783/pause-a-running-script-in-mac-terminal-and-then-resume-later
+kill -9 `jobs -ps`  # kills suspended jobs
+# https://serverfault.com/questions/240155/how-can-i-kill-all-stopped-jobs
 
 
 # convert Ctrl-M (^M) DOS newlines to UNIX
