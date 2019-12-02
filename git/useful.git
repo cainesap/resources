@@ -31,6 +31,10 @@ git clone git@github.com:cainesap/foobar.git
 git add foo.bar
 git commit -m 'commit message'
 git push origin master
+# 7, or set remote
+git push --set-upstream origin master
+# and from now on you only need to:
+git push
 
 # switch from HTTPS to URL connection to repo (i.e. if you already cloned from HTTPS)
 git remote -v
