@@ -42,6 +42,9 @@ args <- commandArgs(trailingOnly=T)
 foo <- args[1]
 etc <- args[2]
 
+# command line execute
+R -e "print('foo')"
+
 
 # set working directory
 setwd('/Users/apcaines/')  # etc
