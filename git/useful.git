@@ -1,5 +1,5 @@
 # what's my config (and why)?
-$ git config --list --show-origin
+git config --list --show-origin
 
 # clone a public repo using HTTPS
 git clone https://github.com/cainesap/foo.git
