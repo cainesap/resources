@@ -315,6 +315,10 @@ response <- userInput()
 unlist(strsplit(foo, ",|:"))
 unlist(strsplit(foo, "\\."))[2]  # split on fullstops, specifying which item in list
 
+# split string, retain delimiters
+x <- "What is this?  It's an onion.  What! That's| Well Crazy."
+unlist(strsplit(x, "(?<=[?.!|])", perl=TRUE))
+
 
 # prompt user input
 print("Press any key to continue...")
