@@ -222,6 +222,11 @@ $\langle$ $\rangle$  % left and right angled brackets
 % or in text mode use textcomp package
 \usepackage{textcomp}
 \textlangle \textrangle
+\usepackage{textcomp,    % for \textlangle and \textrangle macros
+            xspace}
+\newcommand\la{\textlangle\xspace}  % set up short-form macros with following space
+\newcommand\ra{\textrangle\xspace}
+
 \greektext a \latintext  % alpha
 % package 
 \usepackage{textgreek}
