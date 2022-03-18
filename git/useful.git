@@ -7,6 +7,11 @@ git clone https://github.com/cainesap/foo.git
 # soft reset
 git reset HEAD^
 
+# or try
+# as in: https://stackoverflow.com/questions/24114676/git-error-failed-to-push-some-refs-to-remote
+git pull --rebase
+git push
+
 # hard reset
 git fetch --all
 git reset --hard origin/master
@@ -49,3 +54,10 @@ git add .
 git commit -m 'first commit'
 git remote add origin https://github.com/cainesap/NAME_OF_REPO.git
 git push origin master
+
+# rename main branch from 'master'
+# as in: https://www.git-tower.com/learn/git/faq/git-rename-master-to-main
+git branch -m master main
+git push -u origin main
+# if an error message: switch branches on github.com in the settings for 'branch'
+git push origin --delete master
