@@ -1,8 +1,16 @@
 # what's my config (and why)?
 git config --list --show-origin
 
+# set global username
+git config --global user.name "cainesap"
+# and confirm
+git config --global user.name
+
 # clone a public repo using HTTPS
 git clone https://github.com/cainesap/foo.git
+
+# always asking for username? switch to SSH
+git remote set-url origin git@github.com:cainesap/repo.git
 
 # soft reset
 git reset HEAD^
