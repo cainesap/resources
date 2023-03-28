@@ -285,6 +285,11 @@ def repl(m):
     return "<NS type=\"" + m.group(1) + "\">"
 re.sub(r'<(\w)>', repl, test)
 
+# or more simple case of substitution
+def repl(m):
+    return m.group(1)
+
+textlines = [re.sub(r'\s(\W+)$', repl, line) for line in textlines]
 
 
 # collapse list to string
