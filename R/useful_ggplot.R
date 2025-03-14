@@ -24,7 +24,11 @@ geom_point(shape = 15)  # solid square
 + scale_colour_manual(values = c("#bababa", "#2c7bb6", "#d7191c"), labels = c("England", "Scotland", "Wales"))
 
 
-## scales
+##, y=counts, fill=marker)) + geom_bar(stat="identity") +
+  theme_bw() + facet_wrap(~marker, scales="free_y", ncol=1) +
+  scale_fill_brewer(palette="Set1") + theme(text=element_text(family='Times'))
+
+# scales
 # axis titles
 scale_y_continuous("parse")
 
@@ -48,6 +52,9 @@ scale_x_reverse()
 
 # alpha
 geom_point(data, aes(), alpha = 0.25)
+
+# Times font, no legend
++ theme(text=element_text(family='Times'), legend.position='none')
 
 # nb, to override the alpha for the legends, use 'guides':
 p + guides(colour = guide_legend(override.aes = list(alpha = 1)))
